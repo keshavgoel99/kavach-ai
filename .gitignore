@@ -1,1 +1,249 @@
+# =========================================================
+# KAVACH AI — Root .gitignore
+# Electron + React + TypeScript + Node.js + Python
+# =========================================================
+
+
+# ---------------------------------------------------------
+# Environment variables and secrets
+# ---------------------------------------------------------
+
 .env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
+
+# Keep the environment template
+!.env.example
+
+
+# ---------------------------------------------------------
+# Node.js dependencies
+# ---------------------------------------------------------
+
+node_modules/
+
+
+# ---------------------------------------------------------
+# Electron Forge / Webpack output
+# ---------------------------------------------------------
+
+.webpack/
+out/
+dist/
+build/
+release/
+
+# Packaged Electron applications
+*.app
+*.dmg
+*.exe
+*.msi
+*.deb
+*.rpm
+*.AppImage
+
+
+# ---------------------------------------------------------
+# TypeScript generated files
+# ---------------------------------------------------------
+
+*.tsbuildinfo
+
+
+# ---------------------------------------------------------
+# Logs
+# ---------------------------------------------------------
+
+logs/
+*.log
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+debug.log
+error.log
+
+
+# ---------------------------------------------------------
+# Test and coverage output
+# ---------------------------------------------------------
+
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+junit.xml
+
+
+# ---------------------------------------------------------
+# Cache and temporary files
+# ---------------------------------------------------------
+
+.cache/
+.temp/
+tmp/
+temp/
+
+.eslintcache
+.stylelintcache
+.parcel-cache/
+.vite/
+.turbo/
+
+
+# ---------------------------------------------------------
+# Python analytics files
+# ---------------------------------------------------------
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+.venv/
+venv/
+env/
+ENV/
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+*.egg-info/
+.eggs/
+
+pip-wheel-metadata/
+
+
+# ---------------------------------------------------------
+# Python model and generated analytics output
+# ---------------------------------------------------------
+
+models/generated/
+artifacts/
+checkpoints/
+
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.keras
+*.onnx
+*.pt
+*.pth
+
+
+# ---------------------------------------------------------
+# Dataset files
+# Keep raw and processed datasets outside Git by default
+# ---------------------------------------------------------
+
+data/raw/*
+data/processed/*
+
+# Preserve folder placeholders and documentation
+!data/raw/.gitkeep
+!data/raw/README.md
+!data/processed/.gitkeep
+!data/processed/README.md
+
+# Common large data formats
+*.csv
+*.tsv
+*.parquet
+*.feather
+*.xlsx
+*.xls
+
+# Allow deliberately committed sample datasets
+!data/samples/
+!data/samples/**
+!**/.gitkeep
+
+
+# ---------------------------------------------------------
+# Zoho Catalyst local/generated files
+# ---------------------------------------------------------
+
+.catalyst/
+catalyst-debug.log
+catalyst-local.log
+
+
+# ---------------------------------------------------------
+# IDE and editor files
+# ---------------------------------------------------------
+
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+.idea/
+*.iml
+
+.history/
+
+
+# ---------------------------------------------------------
+# Operating-system files
+# ---------------------------------------------------------
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+
+
+# ---------------------------------------------------------
+# Backup and temporary editor files
+# ---------------------------------------------------------
+
+*.swp
+*.swo
+*.bak
+*.tmp
+*.temp
+*.orig
+
+
+# ---------------------------------------------------------
+# Certificates, keys, and credentials
+# ---------------------------------------------------------
+
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+
+credentials.json
+service-account.json
+secrets.json
+
+
+# ---------------------------------------------------------
+# Miscellaneous generated files
+# ---------------------------------------------------------
+
+*.pid
+*.pid.lock
+*.seed
+*.tgz
