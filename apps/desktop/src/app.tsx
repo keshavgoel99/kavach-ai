@@ -75,7 +75,7 @@ function App() {
             </p>
           </div>
 
-          <div className="phase-badge">Phase 1</div>
+          <div className="phase-badge">PHASE 1 · READY</div>
         </header>
 
         <section className="status-grid" aria-label="Project status">
@@ -102,7 +102,9 @@ function App() {
                 <h3>Phase 1 progress</h3>
               </div>
 
-              <span className="panel__badge">In progress</span>
+              <span className="panel__badge panel__badge--complete">
+                Foundation ready
+              </span>
             </div>
 
             <div className="checklist">
@@ -126,7 +128,7 @@ function App() {
                 Backend health API
               </div>
 
-              <div className="checklist__item">
+              <div className="checklist__item checklist__item--complete">
                 <span>5</span>
                 Shared TypeScript contracts
               </div>

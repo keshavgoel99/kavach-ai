@@ -484,3 +484,15 @@ body {
   background: #eef2ff;
   border-radius: 4px;
 }
+
+.panel__badge--complete {
+  color: #146c4d;
+  background: #eafaf2;
+  border-color: #b9e8cf;
+}
+
+.phase-badge {
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  letter-spacing: 0.05em;
+}

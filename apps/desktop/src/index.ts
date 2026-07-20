@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
-import type { ApiHealth } from './types/desktop-api';
+import type { ApiHealth } from '@kavach/shared-types';
 
 // Handle creating/removing shortcuts on Windows during installation.
 if (require('electron-squirrel-startup')) {

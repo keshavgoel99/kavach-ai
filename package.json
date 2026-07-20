@@ -1,0 +1,24 @@
+{
+  "name": "kavach-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-powered desktop crime intelligence platform",
+  "workspaces": [
+    "apps/api",
+    "apps/desktop",
+    "packages/shared-types"
+  ],
+  "scripts": {
+    "dev": "concurrently --kill-others --names API,DESKTOP \"npm run dev --workspace=@kavach/api\" \"npm start --workspace=@kavach/desktop\"",
+    "dev:api": "npm run dev --workspace=@kavach/api",
+    "dev:desktop": "npm start --workspace=@kavach/desktop",
+    "typecheck": "npm run typecheck --workspace=@kavach/shared-types && npm run typecheck --workspace=@kavach/api && npm run typecheck --workspace=@kavach/desktop && npm run lint --workspace=@kavach/desktop",
+    "build": "npm run build --workspace=@kavach/shared-types && npm run build --workspace=@kavach/api && npm run package --workspace=@kavach/desktop"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}

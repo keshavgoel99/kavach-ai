@@ -1,0 +1,13 @@
+{
+  "name": "@kavach/shared-types",
+  "version": "0.1.0",
+  "private": true,
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
+  }
+}

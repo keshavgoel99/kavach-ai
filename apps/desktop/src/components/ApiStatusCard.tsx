@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { ApiHealth } from '../types/desktop-api';
+import type { ApiHealth } from '@kavach/shared-types';
 
 type ApiState =
   | {
