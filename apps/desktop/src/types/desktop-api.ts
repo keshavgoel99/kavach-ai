@@ -8,8 +8,20 @@ export interface RuntimeInfo {
   chromeVersion: string;
 }
 
+export interface ApiHealth {
+  status: 'ok';
+  service: string;
+  version: string;
+  timestamp: string;
+  uptimeSeconds: number;
+}
+
 export interface KavachDesktopApi {
   system: {
     getRuntimeInfo: () => Promise<RuntimeInfo>;
+  };
+
+  api: {
+    getHealth: () => Promise<ApiHealth>;
   };
 }

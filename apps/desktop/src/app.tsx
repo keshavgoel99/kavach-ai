@@ -1,6 +1,7 @@
-import { SystemPanel } from './components/SystemPanel';
-import React from 'react';
-import { createRoot } from 'react-dom/client';
+import { ApiStatusCard } from "./components/ApiStatusCard";
+import { SystemPanel } from "./components/SystemPanel";
+import React from "react";
+import { createRoot } from "react-dom/client";
 
 function StatusCard({
   title,
@@ -34,7 +35,10 @@ function App() {
         </div>
 
         <nav className="navigation" aria-label="Main navigation">
-          <button className="navigation__item navigation__item--active" type="button">
+          <button
+            className="navigation__item navigation__item--active"
+            type="button"
+          >
             Dashboard
           </button>
 
@@ -81,11 +85,7 @@ function App() {
             description="Electron and React renderer are running."
           />
 
-          <StatusCard
-            title="Backend API"
-            value="Pending"
-            description="The local Kavach API will be created next."
-          />
+          <ApiStatusCard />
 
           <StatusCard
             title="Crime dataset"
@@ -116,12 +116,12 @@ function App() {
                 React renderer configured
               </div>
 
-              <div className="checklist__item">
+              <div className="checklist__item checklist__item--complete">
                 <span>3</span>
                 Secure preload bridge
               </div>
 
-              <div className="checklist__item">
+              <div className="checklist__item checklist__item--complete">
                 <span>4</span>
                 Backend health API
               </div>
@@ -140,10 +140,10 @@ function App() {
   );
 }
 
-const rootElement = document.getElementById('root');
+const rootElement = document.getElementById("root");
 
 if (!rootElement) {
-  throw new Error('Unable to find the React root element.');
+  throw new Error("Unable to find the React root element.");
 }
 
 createRoot(rootElement).render(

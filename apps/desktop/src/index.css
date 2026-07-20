@@ -392,3 +392,95 @@ body {
     box-shadow: 0 0 0 5px rgb(23 132 90 / 0%);
   }
 }
+
+.status-card__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.api-status-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.api-status-card::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 46px;
+  height: 3px;
+  content: "";
+  background: #94a3b8;
+}
+
+.api-status-card--online::after {
+  background: #14b8a6;
+}
+
+.api-status-card--offline::after {
+  background: #dc3c4b;
+}
+
+.api-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 7px;
+  color: #64748b;
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  background: #f1f5f9;
+  border: 1px solid #dbe2eb;
+  border-radius: 5px;
+}
+
+.api-status-badge__dot {
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+  border-radius: 999px;
+}
+
+.api-status-card--online .api-status-badge {
+  color: #14805b;
+  background: #ecfbf4;
+  border-color: #bdebd4;
+}
+
+.api-status-card--online .api-status-badge__dot {
+  animation: runtime-pulse 2.2s ease-in-out infinite;
+}
+
+.api-status-card--offline .api-status-badge {
+  color: #bd2939;
+  background: #fff0f1;
+  border-color: #f3c2c8;
+}
+
+.api-status-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 15px;
+  padding-top: 11px;
+  color: #64748b;
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  border-top: 1px solid #edf0f4;
+}
+
+.status-card code {
+  padding: 2px 4px;
+  color: #2457e6;
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  background: #eef2ff;
+  border-radius: 4px;
+}
