@@ -47,7 +47,7 @@ export interface CaseSummary {
   location: CaseLocation | null;
 
   /**
-   * Shortened, sanitized version used in list views.
+   * Shortened and sanitized version used in list views.
    */
   briefFactsPreview: string | null;
 }

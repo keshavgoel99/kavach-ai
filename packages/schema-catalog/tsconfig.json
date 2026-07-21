@@ -19,7 +19,7 @@
   },
   "include": [
     "src/**/*.ts"
-  ],
+, "src/case.ts"  ],
   "exclude": [
     "node_modules",
     "dist"

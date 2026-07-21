@@ -89,8 +89,8 @@ function App() {
 
           <StatusCard
             title="Crime dataset"
-            value="Contracts ready"
-            description="Raw FIR rows and application-safe case responses are now defined."
+            value="Case API ready"
+            description="10,000 synthetic FIR records are available through validated search and detail endpoints."
           />
         </section>
 

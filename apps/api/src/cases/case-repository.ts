@@ -1,0 +1,1092 @@
+import type {
+  CaseAccused,
+  CaseArrestEvent,
+  CaseChargesheet,
+  CaseComplainant,
+  CaseDetail,
+  CaseLegalSection,
+  CaseListFilters,
+  CaseListResponse,
+  CaseLocation,
+  CaseSummary,
+  CaseVictim,
+  LegalReference,
+  NumericLookupReference,
+  PaginationInput,
+} from '@kavach/shared-types';
+
+import type {
+  LoadedCoreDataset,
+} from '../data/dataset-loader';
+
+import {
+  getCoreDataset,
+} from '../data/dataset-service';
+
+import type {
+  CaseMasterRecord,
+} from '../data/case-master-record';
+
+type RawTables =
+  LoadedCoreDataset['rawTables'];
+
+type AccusedRow =
+  RawTables['Accused'][number];
+
+type VictimRow =
+  RawTables['Victim'][number];
+
+type ComplainantRow =
+  RawTables['ComplainantDetails'][number];
+
+type LegalSectionRow =
+  RawTables['ActSectionAssociation'][number];
+
+type ArrestRow =
+  RawTables['ArrestSurrender'][number];
+
+type ArrestAccusedRow =
+  RawTables['ArrestSurrenderAccused'][number];
+
+type ChargesheetRow =
+  RawTables['ChargesheetDetails'][number];
+
+function toInteger(
+  value: string,
+  label: string,
+): number {
+  const cleaned = value.trim();
+
+  if (!/^-?\d+$/.test(cleaned)) {
+    throw new Error(
+      `${label} must contain an integer.`,
+    );
+  }
+
+  const parsed = Number(cleaned);
+
+  if (!Number.isSafeInteger(parsed)) {
+    throw new Error(
+      `${label} exceeds the safe integer range.`,
+    );
+  }
+
+  return parsed;
+}
+
+function toNullableInteger(
+  value: string,
+  label: string,
+): number | null {
+  if (!value.trim()) {
+    return null;
+  }
+
+  return toInteger(value, label);
+}
+
+function toNullableBoolean(
+  value: string,
+  label: string,
+): boolean | null {
+  const cleaned = value.trim().toLowerCase();
+
+  if (!cleaned) {
+    return null;
+  }
+
+  if (cleaned === '1' || cleaned === 'true') {
+    return true;
+  }
+
+  if (cleaned === '0' || cleaned === 'false') {
+    return false;
+  }
+
+  throw new Error(
+    `${label} must contain a boolean value.`,
+  );
+}
+
+function toNullableString(
+  value: string,
+): string | null {
+  const cleaned = value.trim();
+
+  return cleaned || null;
+}
+
+function normalizeDateTime(
+  value: string,
+): string {
+  return value.trim().replace(' ', 'T');
+}
+
+function createPreview(
+  value: string | null,
+  maximumLength = 180,
+): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const cleaned = value.replace(/\s+/g, ' ').trim();
+
+  if (cleaned.length <= maximumLength) {
+    return cleaned;
+  }
+
+  return `${cleaned.slice(0, maximumLength - 1)}…`;
+}
+
+function requireMapValue<Key, Value>(
+  map: ReadonlyMap<Key, Value>,
+  key: Key,
+  label: string,
+): Value {
+  const value = map.get(key);
+
+  if (value === undefined) {
+    throw new Error(
+      `Dataset relationship could not be resolved: ${label}.`,
+    );
+  }
+
+  return value;
+}
+
+function buildNumericLookupMap<
+  Row extends Record<string, string>,
+>(
+  rows: readonly Row[],
+  idColumn: keyof Row & string,
+  nameColumn: keyof Row & string,
+  tableName: string,
+): Map<number, NumericLookupReference> {
+  const map =
+    new Map<number, NumericLookupReference>();
+
+  rows.forEach((row) => {
+    const id = toInteger(
+      row[idColumn]!,
+      `${tableName}.${idColumn}`,
+    );
+
+    const name = row[nameColumn]!.trim();
+
+    if (!name) {
+      throw new Error(
+        `${tableName}.${nameColumn} cannot be empty.`,
+      );
+    }
+
+    map.set(id, {
+      id,
+      name,
+    });
+  });
+
+  return map;
+}
+
+function buildNumericRowMap<
+  Row extends Record<string, string>,
+>(
+  rows: readonly Row[],
+  idColumn: keyof Row & string,
+  tableName: string,
+): Map<number, Row> {
+  const map = new Map<number, Row>();
+
+  rows.forEach((row) => {
+    const id = toInteger(
+      row[idColumn]!,
+      `${tableName}.${idColumn}`,
+    );
+
+    map.set(id, row);
+  });
+
+  return map;
+}
+
+function groupRowsByInteger<
+  Row extends Record<string, string>,
+>(
+  rows: readonly Row[],
+  column: keyof Row & string,
+  tableName: string,
+): Map<number, Row[]> {
+  const groups = new Map<number, Row[]>();
+
+  rows.forEach((row) => {
+    const id = toInteger(
+      row[column]!,
+      `${tableName}.${column}`,
+    );
+
+    const existing = groups.get(id);
+
+    if (existing) {
+      existing.push(row);
+    } else {
+      groups.set(id, [row]);
+    }
+  });
+
+  return groups;
+}
+
+export class CaseRepository {
+  private readonly caseRecordsById =
+    new Map<number, CaseMasterRecord>();
+
+  private readonly summariesById =
+    new Map<number, CaseSummary>();
+
+  private readonly sortedSummaries:
+    readonly CaseSummary[];
+
+  private readonly categoryLookup;
+  private readonly gravityLookup;
+  private readonly statusLookup;
+
+  private readonly crimeHeadLookup;
+  private readonly crimeSubHeadLookup;
+
+  private readonly unitLookup;
+  private readonly districtLookup;
+  private readonly stateLookup;
+  private readonly courtLookup;
+  private readonly employeeLookup;
+
+  private readonly genderLookup;
+  private readonly occupationLookup;
+
+  private readonly unitRows;
+  private readonly locationRows;
+
+  private readonly actLookup =
+    new Map<string, LegalReference>();
+
+  private readonly sectionLookup =
+    new Map<string, LegalReference>();
+
+  private readonly accusedByCase;
+  private readonly victimsByCase;
+  private readonly complainantsByCase;
+  private readonly legalSectionsByCase;
+  private readonly arrestsByCase;
+  private readonly chargesheetsByCase;
+  private readonly accusedByArrest;
+
+  constructor(
+    private readonly dataset: LoadedCoreDataset,
+  ) {
+    const tables = dataset.rawTables;
+
+    this.categoryLookup = buildNumericLookupMap(
+      tables.CaseCategory,
+      'CaseCategoryID',
+      'LookupValue',
+      'CaseCategory',
+    );
+
+    this.gravityLookup = buildNumericLookupMap(
+      tables.GravityOffence,
+      'GravityOffenceID',
+      'LookupValue',
+      'GravityOffence',
+    );
+
+    this.statusLookup = buildNumericLookupMap(
+      tables.CaseStatusMaster,
+      'CaseStatusID',
+      'CaseStatusName',
+      'CaseStatusMaster',
+    );
+
+    this.crimeHeadLookup = buildNumericLookupMap(
+      tables.CrimeHead,
+      'CrimeHeadID',
+      'CrimeGroupName',
+      'CrimeHead',
+    );
+
+    this.crimeSubHeadLookup =
+      buildNumericLookupMap(
+        tables.CrimeSubHead,
+        'CrimeSubHeadID',
+        'CrimeHeadName',
+        'CrimeSubHead',
+      );
+
+    this.unitLookup = buildNumericLookupMap(
+      tables.Unit,
+      'UnitID',
+      'UnitName',
+      'Unit',
+    );
+
+    this.districtLookup = buildNumericLookupMap(
+      tables.District,
+      'DistrictID',
+      'DistrictName',
+      'District',
+    );
+
+    this.stateLookup = buildNumericLookupMap(
+      tables.State,
+      'StateID',
+      'StateName',
+      'State',
+    );
+
+    this.courtLookup = buildNumericLookupMap(
+      tables.Court,
+      'CourtID',
+      'CourtName',
+      'Court',
+    );
+
+    this.employeeLookup = buildNumericLookupMap(
+      tables.Employee,
+      'EmployeeID',
+      'FirstName',
+      'Employee',
+    );
+
+    this.genderLookup = buildNumericLookupMap(
+      tables.GenderMaster,
+      'GenderID',
+      'GenderName',
+      'GenderMaster',
+    );
+
+    this.occupationLookup =
+      buildNumericLookupMap(
+        tables.OccupationMaster,
+        'OccupationID',
+        'OccupationName',
+        'OccupationMaster',
+      );
+
+    this.unitRows = buildNumericRowMap(
+      tables.Unit,
+      'UnitID',
+      'Unit',
+    );
+
+    this.locationRows = buildNumericRowMap(
+      tables.LocationMaster,
+      'LocationID',
+      'LocationMaster',
+    );
+
+    tables.Act.forEach((row) => {
+      this.actLookup.set(row.ActCode, {
+        code: row.ActCode,
+        name: row.ActDescription,
+      });
+    });
+
+    tables.Section.forEach((row) => {
+      this.sectionLookup.set(
+        this.sectionKey(
+          row.ActCode,
+          row.SectionCode,
+        ),
+        {
+          code: row.SectionCode,
+          name: row.SectionDescription,
+        },
+      );
+    });
+
+    this.accusedByCase = groupRowsByInteger(
+      tables.Accused,
+      'CaseMasterID',
+      'Accused',
+    );
+
+    this.victimsByCase = groupRowsByInteger(
+      tables.Victim,
+      'CaseMasterID',
+      'Victim',
+    );
+
+    this.complainantsByCase =
+      groupRowsByInteger(
+        tables.ComplainantDetails,
+        'CaseMasterID',
+        'ComplainantDetails',
+      );
+
+    this.legalSectionsByCase =
+      groupRowsByInteger(
+        tables.ActSectionAssociation,
+        'CaseMasterID',
+        'ActSectionAssociation',
+      );
+
+    this.arrestsByCase = groupRowsByInteger(
+      tables.ArrestSurrender,
+      'CaseMasterID',
+      'ArrestSurrender',
+    );
+
+    this.chargesheetsByCase =
+      groupRowsByInteger(
+        tables.ChargesheetDetails,
+        'CaseMasterID',
+        'ChargesheetDetails',
+      );
+
+    this.accusedByArrest =
+      groupRowsByInteger(
+        tables.ArrestSurrenderAccused,
+        'ArrestSurrenderID',
+        'ArrestSurrenderAccused',
+      );
+
+    dataset.cases.forEach((record) => {
+      this.caseRecordsById.set(
+        record.caseMasterId,
+        record,
+      );
+
+      this.summariesById.set(
+        record.caseMasterId,
+        this.createCaseSummary(record),
+      );
+    });
+
+    this.sortedSummaries = [
+      ...this.summariesById.values(),
+    ].sort((left, right) => {
+      const dateComparison =
+        right.registeredDate.localeCompare(
+          left.registeredDate,
+        );
+
+      if (dateComparison !== 0) {
+        return dateComparison;
+      }
+
+      return right.caseId - left.caseId;
+    });
+  }
+
+  public findCases(
+    filters: CaseListFilters,
+    pagination: PaginationInput,
+  ): CaseListResponse {
+    const searchTerm =
+      filters.search?.trim().toLowerCase();
+
+    const filtered = this.sortedSummaries.filter(
+      (caseSummary) => {
+        if (
+          filters.districtId !== undefined &&
+          caseSummary.district.id !==
+            filters.districtId
+        ) {
+          return false;
+        }
+
+        if (
+          filters.policeStationId !== undefined &&
+          caseSummary.policeStation.id !==
+            filters.policeStationId
+        ) {
+          return false;
+        }
+
+        if (
+          filters.categoryId !== undefined &&
+          caseSummary.category.id !==
+            filters.categoryId
+        ) {
+          return false;
+        }
+
+        if (
+          filters.gravityId !== undefined &&
+          caseSummary.gravity.id !==
+            filters.gravityId
+        ) {
+          return false;
+        }
+
+        if (
+          filters.statusId !== undefined &&
+          caseSummary.status.id !==
+            filters.statusId
+        ) {
+          return false;
+        }
+
+        if (
+          filters.majorCrimeHeadId !==
+            undefined &&
+          caseSummary.majorCrimeHead.id !==
+            filters.majorCrimeHeadId
+        ) {
+          return false;
+        }
+
+        if (
+          filters.minorCrimeHeadId !==
+            undefined &&
+          caseSummary.minorCrimeHead.id !==
+            filters.minorCrimeHeadId
+        ) {
+          return false;
+        }
+
+        if (
+          filters.registeredFrom &&
+          caseSummary.registeredDate <
+            filters.registeredFrom
+        ) {
+          return false;
+        }
+
+        if (
+          filters.registeredTo &&
+          caseSummary.registeredDate >
+            filters.registeredTo
+        ) {
+          return false;
+        }
+
+        if (searchTerm) {
+          const searchableText = [
+            caseSummary.crimeNumber,
+            caseSummary.caseNumber,
+            caseSummary.majorCrimeHead.name,
+            caseSummary.minorCrimeHead.name,
+            caseSummary.policeStation.name,
+            caseSummary.district.name,
+            caseSummary.location?.locationName,
+            caseSummary.briefFactsPreview,
+          ]
+            .filter(
+              (value): value is string =>
+                Boolean(value),
+            )
+            .join(' ')
+            .toLowerCase();
+
+          if (!searchableText.includes(searchTerm)) {
+            return false;
+          }
+        }
+
+        return true;
+      },
+    );
+
+    const totalItems = filtered.length;
+
+    const totalPages =
+      totalItems === 0
+        ? 0
+        : Math.ceil(
+            totalItems / pagination.pageSize,
+          );
+
+    const startIndex =
+      (pagination.page - 1) *
+      pagination.pageSize;
+
+    return {
+      items: filtered.slice(
+        startIndex,
+        startIndex + pagination.pageSize,
+      ),
+
+      pagination: {
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        totalItems,
+        totalPages,
+      },
+    };
+  }
+
+  public findCaseById(
+    caseId: number,
+  ): CaseDetail | null {
+    const record =
+      this.caseRecordsById.get(caseId);
+
+    const summary =
+      this.summariesById.get(caseId);
+
+    if (!record || !summary) {
+      return null;
+    }
+
+    return {
+      ...summary,
+
+      registeringOfficer: requireMapValue(
+        this.employeeLookup,
+        record.policePersonId,
+        `Employee ${record.policePersonId}`,
+      ),
+
+      briefFacts: record.briefFacts,
+
+      complainants:
+        this.createComplainants(caseId),
+
+      victims:
+        this.createVictims(caseId),
+
+      accused:
+        this.createAccused(caseId),
+
+      legalSections:
+        this.createLegalSections(caseId),
+
+      arrestEvents:
+        this.createArrestEvents(caseId),
+
+      chargesheets:
+        this.createChargesheets(caseId),
+    };
+  }
+
+  private createCaseSummary(
+    record: CaseMasterRecord,
+  ): CaseSummary {
+    const unitRow = requireMapValue(
+      this.unitRows,
+      record.policeStationId,
+      `Unit ${record.policeStationId}`,
+    );
+
+    const districtId = toInteger(
+      unitRow.DistrictID,
+      'Unit.DistrictID',
+    );
+
+    const stateId = toInteger(
+      unitRow.StateID,
+      'Unit.StateID',
+    );
+
+    const court =
+      record.courtId === null
+        ? null
+        : requireMapValue(
+            this.courtLookup,
+            record.courtId,
+            `Court ${record.courtId}`,
+          );
+
+    return {
+      caseId: record.caseMasterId,
+
+      crimeNumber: record.crimeNumber,
+      caseNumber: record.caseNumber,
+
+      registeredDate:
+        record.crimeRegisteredDate,
+
+      incidentFrom:
+        record.incidentFromDate,
+
+      incidentTo:
+        record.incidentToDate,
+
+      informationReceivedAt:
+        record.informationReceivedDate,
+
+      category: requireMapValue(
+        this.categoryLookup,
+        record.caseCategoryId,
+        `CaseCategory ${record.caseCategoryId}`,
+      ),
+
+      gravity: requireMapValue(
+        this.gravityLookup,
+        record.gravityOffenceId,
+        `GravityOffence ${record.gravityOffenceId}`,
+      ),
+
+      majorCrimeHead: requireMapValue(
+        this.crimeHeadLookup,
+        record.crimeMajorHeadId,
+        `CrimeHead ${record.crimeMajorHeadId}`,
+      ),
+
+      minorCrimeHead: requireMapValue(
+        this.crimeSubHeadLookup,
+        record.crimeMinorHeadId,
+        `CrimeSubHead ${record.crimeMinorHeadId}`,
+      ),
+
+      status: requireMapValue(
+        this.statusLookup,
+        record.caseStatusId,
+        `CaseStatus ${record.caseStatusId}`,
+      ),
+
+      policeStation: requireMapValue(
+        this.unitLookup,
+        record.policeStationId,
+        `Unit ${record.policeStationId}`,
+      ),
+
+      district: requireMapValue(
+        this.districtLookup,
+        districtId,
+        `District ${districtId}`,
+      ),
+
+      state: requireMapValue(
+        this.stateLookup,
+        stateId,
+        `State ${stateId}`,
+      ),
+
+      court,
+
+      location: this.createLocation(record),
+
+      briefFactsPreview:
+        createPreview(record.briefFacts),
+    };
+  }
+
+  private createLocation(
+    record: CaseMasterRecord,
+  ): CaseLocation {
+    const row = requireMapValue(
+      this.locationRows,
+      record.locationId,
+      `Location ${record.locationId}`,
+    );
+
+    return {
+      locationId: record.locationId,
+      locationName:
+        toNullableString(row.LocationName),
+      zoneType:
+        toNullableString(row.ZoneType),
+      latitude: record.latitude,
+      longitude: record.longitude,
+    };
+  }
+
+  private createComplainants(
+    caseId: number,
+  ): CaseComplainant[] {
+    const rows =
+      this.complainantsByCase.get(caseId) ?? [];
+
+    return rows.map((row: ComplainantRow) => ({
+      id: toInteger(
+        row.ComplainantID,
+        'ComplainantDetails.ComplainantID',
+      ),
+
+      name: row.ComplainantName,
+
+      age: toNullableInteger(
+        row.AgeYear,
+        'ComplainantDetails.AgeYear',
+      ),
+
+      gender: this.optionalLookup(
+        this.genderLookup,
+        row.GenderID,
+        'ComplainantDetails.GenderID',
+      ),
+
+      occupation: this.optionalLookup(
+        this.occupationLookup,
+        row.OccupationID,
+        'ComplainantDetails.OccupationID',
+      ),
+    }));
+  }
+
+  private createVictims(
+    caseId: number,
+  ): CaseVictim[] {
+    const rows =
+      this.victimsByCase.get(caseId) ?? [];
+
+    return rows.map((row: VictimRow) => ({
+      id: toInteger(
+        row.VictimMasterID,
+        'Victim.VictimMasterID',
+      ),
+
+      name: row.VictimName,
+
+      age: toNullableInteger(
+        row.AgeYear,
+        'Victim.AgeYear',
+      ),
+
+      gender: this.optionalLookup(
+        this.genderLookup,
+        row.GenderID,
+        'Victim.GenderID',
+      ),
+
+      isPolicePersonnel: toNullableBoolean(
+        row.VictimPolice,
+        'Victim.VictimPolice',
+      ),
+    }));
+  }
+
+  private createAccused(
+    caseId: number,
+  ): CaseAccused[] {
+    const rows =
+      this.accusedByCase.get(caseId) ?? [];
+
+    return rows.map((row: AccusedRow) => ({
+      id: toInteger(
+        row.AccusedMasterID,
+        'Accused.AccusedMasterID',
+      ),
+
+      name: row.AccusedName,
+
+      age: toNullableInteger(
+        row.AgeYear,
+        'Accused.AgeYear',
+      ),
+
+      gender: this.optionalLookup(
+        this.genderLookup,
+        row.GenderID,
+        'Accused.GenderID',
+      ),
+
+      personCode:
+        toNullableString(row.PersonID),
+
+      resolvedEntityId: null,
+    }));
+  }
+
+  private createLegalSections(
+    caseId: number,
+  ): CaseLegalSection[] {
+    const rows =
+      this.legalSectionsByCase.get(caseId) ?? [];
+
+    return rows
+      .map((row: LegalSectionRow) => {
+        const act = requireMapValue(
+          this.actLookup,
+          row.ActID,
+          `Act ${row.ActID}`,
+        );
+
+        const section = requireMapValue(
+          this.sectionLookup,
+          this.sectionKey(
+            row.ActID,
+            row.SectionID,
+          ),
+          `Section ${row.ActID}/${row.SectionID}`,
+        );
+
+        return {
+          act,
+          section,
+
+          actOrder: toNullableInteger(
+            row.ActOrderID,
+            'ActSectionAssociation.ActOrderID',
+          ),
+
+          sectionOrder: toNullableInteger(
+            row.SectionOrderID,
+            'ActSectionAssociation.SectionOrderID',
+          ),
+        };
+      })
+      .sort(
+        (left, right) =>
+          (left.actOrder ?? 0) -
+            (right.actOrder ?? 0) ||
+          (left.sectionOrder ?? 0) -
+            (right.sectionOrder ?? 0),
+      );
+  }
+
+  private createArrestEvents(
+    caseId: number,
+  ): CaseArrestEvent[] {
+    const rows =
+      this.arrestsByCase.get(caseId) ?? [];
+
+    return rows.map((row: ArrestRow) => {
+      const arrestId = toInteger(
+        row.ArrestSurrenderID,
+        'ArrestSurrender.ArrestSurrenderID',
+      );
+
+      const linkRows =
+        this.accusedByArrest.get(arrestId) ?? [];
+
+      const linkedAccusedIds = linkRows.map(
+        (link: ArrestAccusedRow) =>
+          toInteger(
+            link.AccusedMasterID,
+            'ArrestSurrenderAccused.AccusedMasterID',
+          ),
+      );
+
+      const fallbackAccusedId =
+        toNullableInteger(
+          row.AccusedMasterID,
+          'ArrestSurrender.AccusedMasterID',
+        );
+
+      const accusedIds = [
+        ...new Set([
+          ...linkedAccusedIds,
+          ...(fallbackAccusedId === null
+            ? []
+            : [fallbackAccusedId]),
+        ]),
+      ];
+
+      return {
+        arrestSurrenderId: arrestId,
+
+        eventTypeId: toInteger(
+          row.ArrestSurrenderTypeID,
+          'ArrestSurrender.ArrestSurrenderTypeID',
+        ),
+
+        eventDate: row.ArrestSurrenderDate,
+
+        state: this.optionalLookup(
+          this.stateLookup,
+          row.ArrestSurrenderStateId,
+          'ArrestSurrender.ArrestSurrenderStateId',
+        ),
+
+        district: this.optionalLookup(
+          this.districtLookup,
+          row.ArrestSurrenderDistrictId,
+          'ArrestSurrender.ArrestSurrenderDistrictId',
+        ),
+
+        policeStation: this.optionalLookup(
+          this.unitLookup,
+          row.PoliceStationID,
+          'ArrestSurrender.PoliceStationID',
+        ),
+
+        investigatingOfficer:
+          this.optionalLookup(
+            this.employeeLookup,
+            row.IOID,
+            'ArrestSurrender.IOID',
+          ),
+
+        court: this.optionalLookup(
+          this.courtLookup,
+          row.CourtID,
+          'ArrestSurrender.CourtID',
+        ),
+
+        accusedIds,
+
+        isAccused: toNullableBoolean(
+          row.IsAccused,
+          'ArrestSurrender.IsAccused',
+        ),
+
+        isComplainantAccused:
+          toNullableBoolean(
+            row.IsComplainantAccused,
+            'ArrestSurrender.IsComplainantAccused',
+          ),
+      };
+    });
+  }
+
+  private createChargesheets(
+    caseId: number,
+  ): CaseChargesheet[] {
+    const rows =
+      this.chargesheetsByCase.get(caseId) ?? [];
+
+    return rows.map((row: ChargesheetRow) => ({
+      chargesheetId: toInteger(
+        row.CSID,
+        'ChargesheetDetails.CSID',
+      ),
+
+      chargesheetDate:
+        normalizeDateTime(row.csdate),
+
+      reportCode: row.cstype,
+
+      policeOfficer: this.optionalLookup(
+        this.employeeLookup,
+        row.PolicePersonID,
+        'ChargesheetDetails.PolicePersonID',
+      ),
+    }));
+  }
+
+  private optionalLookup(
+    map: ReadonlyMap<
+      number,
+      NumericLookupReference
+    >,
+    rawId: string,
+    label: string,
+  ): NumericLookupReference | null {
+    const id = toNullableInteger(
+      rawId,
+      label,
+    );
+
+    if (id === null) {
+      return null;
+    }
+
+    return requireMapValue(
+      map,
+      id,
+      `${label}=${id}`,
+    );
+  }
+
+  private sectionKey(
+    actCode: string,
+    sectionCode: string,
+  ): string {
+    return `${actCode}\u001f${sectionCode}`;
+  }
+}
+
+let repositoryPromise:
+  Promise<CaseRepository> | undefined;
+
+export function getCaseRepository(): Promise<CaseRepository> {
+  repositoryPromise ??=
+    getCoreDataset().then(
+      (dataset) =>
+        new CaseRepository(dataset),
+    );
+
+  return repositoryPromise;
+}
