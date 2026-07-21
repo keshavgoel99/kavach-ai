@@ -88,10 +88,10 @@ function App() {
           <ApiStatusCard />
 
           <StatusCard
-            title="Crime dataset"
-            value="Connected"
-            description="The relational FIR dataset and schema catalog are available locally."
-          />
+  title="Crime dataset"
+  value="Contracts ready"
+  description="Raw FIR rows and application-safe case responses are now defined."
+/>
         </section>
 
         <section className="content-grid">
