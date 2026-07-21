@@ -1,8 +1,8 @@
 {
   "name": "@kavach/desktop",
-  "productName": "desktop",
+  "productName": "Kavach AI",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Kavach AI crime intelligence desktop application",
   "main": ".webpack/main",
   "private": true,
   "scripts": {

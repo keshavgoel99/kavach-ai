@@ -6,7 +6,8 @@
   "workspaces": [
     "apps/api",
     "apps/desktop",
-    "packages/shared-types"
+    "packages/shared-types",
+    "packages/schema-catalog"
   ],
   "scripts": {
     "dev": "concurrently --kill-others --names API,DESKTOP \"npm run dev --workspace=@kavach/api\" \"npm start --workspace=@kavach/desktop\"",

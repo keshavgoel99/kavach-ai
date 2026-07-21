@@ -75,7 +75,7 @@ function App() {
             </p>
           </div>
 
-          <div className="phase-badge">PHASE 1 · READY</div>
+          <div className="phase-badge">PHASE 2 · DATA FOUNDATION</div>
         </header>
 
         <section className="status-grid" aria-label="Project status">
@@ -89,8 +89,8 @@ function App() {
 
           <StatusCard
             title="Crime dataset"
-            value="Pending"
-            description="Dataset validation begins after the API foundation."
+            value="Connected"
+            description="The relational FIR dataset and schema catalog are available locally."
           />
         </section>
 
