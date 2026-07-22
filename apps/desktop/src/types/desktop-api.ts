@@ -1,3 +1,6 @@
+import type {
+  CaseBridge,
+} from './case-bridge';
 import type { ApiHealth } from '@kavach/shared-types';
 
 export interface RuntimeInfo {
@@ -11,6 +14,7 @@ export interface RuntimeInfo {
 }
 
 export interface KavachDesktopApi {
+  cases: CaseBridge;
   system: {
     getRuntimeInfo: () => Promise<RuntimeInfo>;
   };
