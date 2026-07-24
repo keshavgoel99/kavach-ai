@@ -4,11 +4,12 @@ import {
 } from 'react';
 
 import type {
-  FormEvent,
   KeyboardEvent,
 } from 'react';
 
 import type {
+  CaseFilterOptions,
+  CaseListFilters,
   CaseListResponse,
   CaseSummary,
 } from '@kavach/shared-types';
@@ -16,6 +17,15 @@ import type {
 import {
   CaseDetailDrawer,
 } from './CaseDetailDrawer';
+
+import {
+  CrimeRecordFilters,
+  EMPTY_CRIME_RECORD_FILTERS,
+} from './CrimeRecordFilters';
+
+import type {
+  CrimeRecordFilterValues,
+} from './CrimeRecordFilters';
 
 import './CrimeRecordsPanel.css';
 
@@ -81,6 +91,104 @@ function createBadgeClass(
   return 'records-badge';
 }
 
+function optionalNumber(
+  value: string,
+): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+
+  return Number.isSafeInteger(parsed)
+    ? parsed
+    : undefined;
+}
+
+function createApiFilters(
+  values: CrimeRecordFilterValues,
+): CaseListFilters {
+  const filters: CaseListFilters = {};
+
+  const search = values.search.trim();
+
+  if (search) {
+    filters.search = search;
+  }
+
+  const districtId =
+    optionalNumber(values.districtId);
+
+  if (districtId !== undefined) {
+    filters.districtId = districtId;
+  }
+
+  const policeStationId =
+    optionalNumber(
+      values.policeStationId,
+    );
+
+  if (policeStationId !== undefined) {
+    filters.policeStationId =
+      policeStationId;
+  }
+
+  const gravityId =
+    optionalNumber(values.gravityId);
+
+  if (gravityId !== undefined) {
+    filters.gravityId = gravityId;
+  }
+
+  const statusId =
+    optionalNumber(values.statusId);
+
+  if (statusId !== undefined) {
+    filters.statusId = statusId;
+  }
+
+  const majorCrimeHeadId =
+    optionalNumber(
+      values.majorCrimeHeadId,
+    );
+
+  if (majorCrimeHeadId !== undefined) {
+    filters.majorCrimeHeadId =
+      majorCrimeHeadId;
+  }
+
+  const minorCrimeHeadId =
+    optionalNumber(
+      values.minorCrimeHeadId,
+    );
+
+  if (minorCrimeHeadId !== undefined) {
+    filters.minorCrimeHeadId =
+      minorCrimeHeadId;
+  }
+
+  if (values.registeredFrom) {
+    filters.registeredFrom =
+      values.registeredFrom;
+  }
+
+  if (values.registeredTo) {
+    filters.registeredTo =
+      values.registeredTo;
+  }
+
+  return filters;
+}
+
+function countFilters(
+  values: CrimeRecordFilterValues,
+): number {
+  return Object.values(values).filter(
+    (value) =>
+      value.trim().length > 0,
+  ).length;
+}
+
 interface CaseRowProps {
   item: CaseSummary;
   onSelect(caseId: number): void;
@@ -95,7 +203,8 @@ function CaseRow({
   }
 
   function handleKeyDown(
-    event: KeyboardEvent<HTMLTableRowElement>,
+    event:
+      KeyboardEvent<HTMLTableRowElement>,
   ): void {
     if (
       event.key === 'Enter' ||
@@ -169,7 +278,9 @@ function CaseRow({
 
       <td>
         <div className="records-primary">
-          {formatDate(item.registeredDate)}
+          {formatDate(
+            item.registeredDate,
+          )}
         </div>
 
         <div className="records-secondary">
@@ -195,16 +306,46 @@ function CaseRow({
 }
 
 export function CrimeRecordsPanel() {
-  const [searchInput, setSearchInput] =
-    useState('');
+  const [
+    draftFilters,
+    setDraftFilters,
+  ] = useState<CrimeRecordFilterValues>({
+    ...EMPTY_CRIME_RECORD_FILTERS,
+  });
 
-  const [appliedSearch, setAppliedSearch] =
-    useState('');
+  const [
+    appliedFilters,
+    setAppliedFilters,
+  ] = useState<CrimeRecordFilterValues>({
+    ...EMPTY_CRIME_RECORD_FILTERS,
+  });
+
+  const [filterOptions, setFilterOptions] =
+    useState<CaseFilterOptions | null>(
+      null,
+    );
+
+  const [
+    filterOptionsLoading,
+    setFilterOptionsLoading,
+  ] = useState(true);
+
+  const [
+    filterOptionsError,
+    setFilterOptionsError,
+  ] = useState<string | null>(null);
+
+  const [
+    filterValidationError,
+    setFilterValidationError,
+  ] = useState<string | null>(null);
 
   const [page, setPage] = useState(1);
 
   const [result, setResult] =
-    useState<CaseListResponse | null>(null);
+    useState<CaseListResponse | null>(
+      null,
+    );
 
   const [loading, setLoading] =
     useState(true);
@@ -217,12 +358,63 @@ export function CrimeRecordsPanel() {
     setSelectedCaseId,
   ] = useState<number | null>(null);
 
+  const appliedFilterCount =
+    countFilters(appliedFilters);
+
   useEffect(() => {
     let isActive = true;
 
-    async function loadCases(): Promise<void> {
+    async function loadOptions():
+    Promise<void> {
+      setFilterOptionsLoading(true);
+      setFilterOptionsError(null);
+
+      try {
+        const response =
+          await window.kavach.cases
+            .getFilterOptions();
+
+        if (isActive) {
+          setFilterOptions(response);
+        }
+      } catch (requestError: unknown) {
+        if (!isActive) {
+          return;
+        }
+
+        setFilterOptions(null);
+
+        setFilterOptionsError(
+          requestError instanceof Error
+            ? requestError.message
+            : 'Filter options could not be loaded.',
+        );
+      } finally {
+        if (isActive) {
+          setFilterOptionsLoading(false);
+        }
+      }
+    }
+
+    void loadOptions();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadCases():
+    Promise<void> {
       setLoading(true);
       setError(null);
+
+      const filters =
+        createApiFilters(
+          appliedFilters,
+        );
 
       try {
         const response =
@@ -230,11 +422,10 @@ export function CrimeRecordsPanel() {
             page,
             pageSize: PAGE_SIZE,
 
-            filters: appliedSearch
-              ? {
-                  search: appliedSearch,
-                }
-              : undefined,
+            filters:
+              Object.keys(filters).length > 0
+                ? filters
+                : undefined,
           });
 
         if (isActive) {
@@ -264,23 +455,43 @@ export function CrimeRecordsPanel() {
     return () => {
       isActive = false;
     };
-  }, [appliedSearch, page]);
+  }, [appliedFilters, page]);
 
-  function handleSearch(
-    event: FormEvent<HTMLFormElement>,
-  ): void {
-    event.preventDefault();
+  function applyFilters(): void {
+    if (
+      draftFilters.registeredFrom &&
+      draftFilters.registeredTo &&
+      draftFilters.registeredFrom >
+        draftFilters.registeredTo
+    ) {
+      setFilterValidationError(
+        'Registered-from date cannot be later than registered-to date.',
+      );
 
+      return;
+    }
+
+    setFilterValidationError(null);
     setPage(1);
-    setAppliedSearch(
-      searchInput.trim(),
-    );
+
+    setAppliedFilters({
+      ...draftFilters,
+      search:
+        draftFilters.search.trim(),
+    });
   }
 
-  function clearSearch(): void {
-    setSearchInput('');
-    setAppliedSearch('');
+  function clearFilters(): void {
+    setFilterValidationError(null);
     setPage(1);
+
+    setDraftFilters({
+      ...EMPTY_CRIME_RECORD_FILTERS,
+    });
+
+    setAppliedFilters({
+      ...EMPTY_CRIME_RECORD_FILTERS,
+    });
   }
 
   const pagination =
@@ -319,8 +530,9 @@ export function CrimeRecordsPanel() {
             </h2>
 
             <p>
-              Search and inspect validated FIR
-              records from the Kavach data layer.
+              Search, filter and inspect
+              validated FIR records from the
+              Kavach data layer.
             </p>
           </div>
 
@@ -334,46 +546,26 @@ export function CrimeRecordsPanel() {
           </div>
         </div>
 
-        <form
-          className="crime-records__search"
-          onSubmit={handleSearch}
-        >
-          <label htmlFor="crime-record-search">
-            Search records
-          </label>
-
-          <div className="crime-records__search-row">
-            <input
-              id="crime-record-search"
-              type="search"
-              value={searchInput}
-              onChange={(event) =>
-                setSearchInput(
-                  event.target.value,
-                )
-              }
-              placeholder="Crime number, offence, station, district or location"
-            />
-
-            <button
-              type="submit"
-              disabled={loading}
-            >
-              Search
-            </button>
-
-            {appliedSearch && (
-              <button
-                type="button"
-                className="crime-records__clear"
-                onClick={clearSearch}
-                disabled={loading}
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </form>
+        <CrimeRecordFilters
+          values={draftFilters}
+          options={filterOptions}
+          optionsLoading={
+            filterOptionsLoading
+          }
+          optionsError={
+            filterOptionsError
+          }
+          requestLoading={loading}
+          appliedFilterCount={
+            appliedFilterCount
+          }
+          validationError={
+            filterValidationError
+          }
+          onChange={setDraftFilters}
+          onApply={applyFilters}
+          onClear={clearFilters}
+        />
 
         <div className="crime-records__summary">
           <div>
@@ -383,15 +575,20 @@ export function CrimeRecordsPanel() {
             </strong>
 
             <span>
-              {appliedSearch
+              {appliedFilterCount > 0
                 ? ' matching records'
                 : ' indexed records'}
             </span>
           </div>
 
-          {appliedSearch && (
+          {appliedFilterCount > 0 && (
             <div className="crime-records__query">
-              Query: “{appliedSearch}”
+              {appliedFilterCount}
+              {' '}
+              active query parameter
+              {appliedFilterCount === 1
+                ? ''
+                : 's'}
             </div>
           )}
         </div>
@@ -437,28 +634,31 @@ export function CrimeRecordsPanel() {
               )}
 
               {!loading &&
-                result?.items.length === 0 && (
+                result?.items.length ===
+                  0 && (
                   <tr>
                     <td
                       colSpan={7}
                       className="crime-records__message"
                     >
                       No crime records matched
-                      the current search.
+                      the current filters.
                     </td>
                   </tr>
                 )}
 
               {!loading &&
-                result?.items.map((item) => (
-                  <CaseRow
-                    key={item.caseId}
-                    item={item}
-                    onSelect={
-                      setSelectedCaseId
-                    }
-                  />
-                ))}
+                result?.items.map(
+                  (item) => (
+                    <CaseRow
+                      key={item.caseId}
+                      item={item}
+                      onSelect={
+                        setSelectedCaseId
+                      }
+                    />
+                  ),
+                )}
             </tbody>
           </table>
         </div>
