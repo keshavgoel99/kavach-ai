@@ -130,6 +130,42 @@ export interface CaseChargesheet {
   policeOfficer: NumericLookupReference | null;
 }
 
+export interface CaseTimelineEvent {
+  timelineEventId: number;
+
+  eventDateTime: IsoDateTimeString;
+  eventType: string;
+  description: string;
+
+  actor: NumericLookupReference | null;
+  sourceType: string;
+}
+
+export interface CaseNarrative {
+  languageCode: string;
+  narrativeText: string;
+  sourceType: string;
+  dataOrigin: string;
+}
+
+export interface CaseEvidenceItem {
+  evidenceId: number;
+
+  evidenceType: string;
+  description: string;
+
+  collectedDateTime:
+    IsoDateTimeString | null;
+
+  /**
+   * Reliability value supplied by the dataset.
+   * Expected range: 0 to 1.
+   */
+  reliabilityScore: number | null;
+
+  dataOrigin: string;
+}
+
 export interface CaseDetail extends CaseSummary {
   registeringOfficer: NumericLookupReference;
 
@@ -142,6 +178,10 @@ export interface CaseDetail extends CaseSummary {
   legalSections: CaseLegalSection[];
   arrestEvents: CaseArrestEvent[];
   chargesheets: CaseChargesheet[];
+
+  timeline?: CaseTimelineEvent[];
+  narratives?: CaseNarrative[];
+  evidenceItems?: CaseEvidenceItem[];
 }
 
 export interface CaseListFilters {

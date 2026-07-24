@@ -216,6 +216,34 @@ export const CORE_TABLE_COLUMNS = {
     'cstype',
     'PolicePersonID',
   ],
+
+  CaseTimeline: [
+    'TimelineEventID',
+    'CaseMasterID',
+    'EventDateTime',
+    'EventType',
+    'EventDescription',
+    'ActorEmployeeID',
+    'SourceType',
+  ],
+
+  CaseNarrative: [
+    'CaseMasterID',
+    'LanguageCode',
+    'NarrativeText',
+    'SourceType',
+    'DataOrigin',
+  ],
+
+  EvidenceItem: [
+    'EvidenceID',
+    'CaseMasterID',
+    'EvidenceType',
+    'Description',
+    'CollectedDateTime',
+    'ReliabilityScore',
+    'DataOrigin',
+  ],
 } as const;
 
 export type CoreTableName =
@@ -314,6 +342,15 @@ export type ArrestSurrenderAccusedRow =
 export type ChargesheetDetailsRow =
   CoreTableRowMap['ChargesheetDetails'];
 
+export type CaseTimelineRow =
+  CoreTableRowMap['CaseTimeline'];
+
+export type CaseNarrativeRow =
+  CoreTableRowMap['CaseNarrative'];
+
+export type EvidenceItemRow =
+  CoreTableRowMap['EvidenceItem'];
+
 /**
  * Database or logical keys used for duplicate detection.
  *
@@ -363,4 +400,18 @@ export const CORE_TABLE_PRIMARY_KEYS = {
   ],
 
   ChargesheetDetails: ['CSID'],
+
+  CaseTimeline: [
+    'TimelineEventID',
+  ],
+
+  CaseNarrative: [
+    'CaseMasterID',
+    'LanguageCode',
+    'SourceType',
+  ],
+
+  EvidenceItem: [
+    'EvidenceID',
+  ],
 } as const;
