@@ -1,7 +1,11 @@
 import {
-  FormEvent,
   useEffect,
   useState,
+} from 'react';
+
+import type {
+  FormEvent,
+  KeyboardEvent,
 } from 'react';
 
 import type {
@@ -9,12 +13,18 @@ import type {
   CaseSummary,
 } from '@kavach/shared-types';
 
+import {
+  CaseDetailDrawer,
+} from './CaseDetailDrawer';
+
 import './CrimeRecordsPanel.css';
 
 const PAGE_SIZE = 12;
 
 function formatDate(value: string): string {
-  const date = new Date(`${value}T00:00:00`);
+  const date = new Date(
+    `${value}T00:00:00`,
+  );
 
   if (Number.isNaN(date.getTime())) {
     return value;
@@ -33,23 +43,28 @@ function formatDate(value: string): string {
 function createBadgeClass(
   value: string,
 ): string {
-  const normalized = value
-    .trim()
-    .toLowerCase();
+  const normalized =
+    value.trim().toLowerCase();
 
   if (
     normalized.includes('heinous') ||
     normalized.includes('grave') ||
     normalized.includes('serious')
   ) {
-    return 'records-badge records-badge--critical';
+    return (
+      'records-badge ' +
+      'records-badge--critical'
+    );
   }
 
   if (
     normalized.includes('pending') ||
     normalized.includes('investigation')
   ) {
-    return 'records-badge records-badge--warning';
+    return (
+      'records-badge ' +
+      'records-badge--warning'
+    );
   }
 
   if (
@@ -57,19 +72,51 @@ function createBadgeClass(
     normalized.includes('disposed') ||
     normalized.includes('completed')
   ) {
-    return 'records-badge records-badge--success';
+    return (
+      'records-badge ' +
+      'records-badge--success'
+    );
   }
 
   return 'records-badge';
 }
 
+interface CaseRowProps {
+  item: CaseSummary;
+  onSelect(caseId: number): void;
+}
+
 function CaseRow({
   item,
-}: {
-  item: CaseSummary;
-}) {
+  onSelect,
+}: CaseRowProps) {
+  function selectRecord(): void {
+    onSelect(item.caseId);
+  }
+
+  function handleKeyDown(
+    event: KeyboardEvent<HTMLTableRowElement>,
+  ): void {
+    if (
+      event.key === 'Enter' ||
+      event.key === ' '
+    ) {
+      event.preventDefault();
+      selectRecord();
+    }
+  }
+
   return (
-    <tr>
+    <tr
+      className="crime-records__row"
+      tabIndex={0}
+      role="button"
+      aria-label={
+        `Open case ${item.crimeNumber}`
+      }
+      onClick={selectRecord}
+      onKeyDown={handleKeyDown}
+    >
       <td>
         <div className="records-primary">
           {item.crimeNumber}
@@ -130,6 +177,19 @@ function CaseRow({
             'Location unavailable'}
         </div>
       </td>
+
+      <td>
+        <button
+          type="button"
+          className="crime-records__inspect"
+          onClick={(event) => {
+            event.stopPropagation();
+            selectRecord();
+          }}
+        >
+          Inspect
+        </button>
+      </td>
     </tr>
   );
 }
@@ -151,6 +211,11 @@ export function CrimeRecordsPanel() {
 
   const [error, setError] =
     useState<string | null>(null);
+
+  const [
+    selectedCaseId,
+    setSelectedCaseId,
+  ] = useState<number | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -207,7 +272,9 @@ export function CrimeRecordsPanel() {
     event.preventDefault();
 
     setPage(1);
-    setAppliedSearch(searchInput.trim());
+    setAppliedSearch(
+      searchInput.trim(),
+    );
   }
 
   function clearSearch(): void {
@@ -216,232 +283,254 @@ export function CrimeRecordsPanel() {
     setPage(1);
   }
 
-  const pagination = result?.pagination;
+  const pagination =
+    result?.pagination;
 
   const firstItem =
-    pagination && pagination.totalItems > 0
-      ? (pagination.page - 1) *
-          pagination.pageSize +
-        1
+    pagination &&
+    pagination.totalItems > 0
+      ? (
+          pagination.page - 1
+        ) * pagination.pageSize + 1
       : 0;
 
-  const lastItem =
-    pagination
-      ? Math.min(
-          pagination.page *
-            pagination.pageSize,
-          pagination.totalItems,
-        )
-      : 0;
+  const lastItem = pagination
+    ? Math.min(
+        pagination.page *
+          pagination.pageSize,
+        pagination.totalItems,
+      )
+    : 0;
 
   return (
-    <section
-      className="crime-records"
-      aria-labelledby="crime-records-title"
-    >
-      <div className="crime-records__header">
-        <div>
-          <div className="crime-records__eyebrow">
-            LIVE FIR INDEX
+    <>
+      <section
+        className="crime-records"
+        aria-labelledby="crime-records-title"
+      >
+        <div className="crime-records__header">
+          <div>
+            <div className="crime-records__eyebrow">
+              LIVE FIR INDEX
+            </div>
+
+            <h2 id="crime-records-title">
+              Crime Records
+            </h2>
+
+            <p>
+              Search and inspect validated FIR
+              records from the Kavach data layer.
+            </p>
           </div>
 
-          <h2 id="crime-records-title">
-            Crime Records
-          </h2>
+          <div className="crime-records__signal">
+            <span
+              className="crime-records__signal-dot"
+              aria-hidden="true"
+            />
 
-          <p>
-            Search and inspect validated FIR
-            records from the Kavach data layer.
-          </p>
+            DATA LINK ACTIVE
+          </div>
         </div>
 
-        <div className="crime-records__signal">
-          <span
-            className="crime-records__signal-dot"
-            aria-hidden="true"
-          />
+        <form
+          className="crime-records__search"
+          onSubmit={handleSearch}
+        >
+          <label htmlFor="crime-record-search">
+            Search records
+          </label>
 
-          DATA LINK ACTIVE
-        </div>
-      </div>
+          <div className="crime-records__search-row">
+            <input
+              id="crime-record-search"
+              type="search"
+              value={searchInput}
+              onChange={(event) =>
+                setSearchInput(
+                  event.target.value,
+                )
+              }
+              placeholder="Crime number, offence, station, district or location"
+            />
 
-      <form
-        className="crime-records__search"
-        onSubmit={handleSearch}
-      >
-        <label htmlFor="crime-record-search">
-          Search records
-        </label>
-
-        <div className="crime-records__search-row">
-          <input
-            id="crime-record-search"
-            type="search"
-            value={searchInput}
-            onChange={(event) =>
-              setSearchInput(
-                event.target.value,
-              )
-            }
-            placeholder="Crime number, offence, station, district or location"
-          />
-
-          <button
-            type="submit"
-            disabled={loading}
-          >
-            Search
-          </button>
-
-          {appliedSearch && (
             <button
-              type="button"
-              className="crime-records__clear"
-              onClick={clearSearch}
+              type="submit"
               disabled={loading}
             >
-              Clear
+              Search
             </button>
+
+            {appliedSearch && (
+              <button
+                type="button"
+                className="crime-records__clear"
+                onClick={clearSearch}
+                disabled={loading}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </form>
+
+        <div className="crime-records__summary">
+          <div>
+            <strong>
+              {pagination?.totalItems ??
+                '—'}
+            </strong>
+
+            <span>
+              {appliedSearch
+                ? ' matching records'
+                : ' indexed records'}
+            </span>
+          </div>
+
+          {appliedSearch && (
+            <div className="crime-records__query">
+              Query: “{appliedSearch}”
+            </div>
           )}
         </div>
-      </form>
 
-      <div className="crime-records__summary">
-        <div>
-          <strong>
-            {pagination?.totalItems ??
-              '—'}
-          </strong>
+        {error && (
+          <div
+            className="crime-records__error"
+            role="alert"
+          >
+            <strong>
+              Records link unavailable
+            </strong>
 
-          <span>
-            {appliedSearch
-              ? ' matching records'
-              : ' indexed records'}
-          </span>
-        </div>
-
-        {appliedSearch && (
-          <div className="crime-records__query">
-            Query: “{appliedSearch}”
+            <span>{error}</span>
           </div>
         )}
-      </div>
 
-      {error && (
-        <div
-          className="crime-records__error"
-          role="alert"
-        >
-          <strong>
-            Records link unavailable
-          </strong>
-
-          <span>{error}</span>
-        </div>
-      )}
-
-      <div className="crime-records__table-shell">
-        <table>
-          <thead>
-            <tr>
-              <th>Crime record</th>
-              <th>Offence</th>
-              <th>Jurisdiction</th>
-              <th>Gravity</th>
-              <th>Status</th>
-              <th>Registered</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {loading && (
+        <div className="crime-records__table-shell">
+          <table>
+            <thead>
               <tr>
-                <td
-                  colSpan={6}
-                  className="crime-records__message"
-                >
-                  Loading secured FIR records…
-                </td>
+                <th>Crime record</th>
+                <th>Offence</th>
+                <th>Jurisdiction</th>
+                <th>Gravity</th>
+                <th>Status</th>
+                <th>Registered</th>
+                <th>Action</th>
               </tr>
-            )}
+            </thead>
 
-            {!loading &&
-              result?.items.length === 0 && (
+            <tbody>
+              {loading && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="crime-records__message"
                   >
-                    No crime records matched
-                    the current search.
+                    Loading secured FIR
+                    records…
                   </td>
                 </tr>
               )}
 
-            {!loading &&
-              result?.items.map((item) => (
-                <CaseRow
-                  key={item.caseId}
-                  item={item}
-                />
-              ))}
-          </tbody>
-        </table>
-      </div>
+              {!loading &&
+                result?.items.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="crime-records__message"
+                    >
+                      No crime records matched
+                      the current search.
+                    </td>
+                  </tr>
+                )}
 
-      <div className="crime-records__pagination">
-        <div>
-          {pagination &&
-          pagination.totalItems > 0
-            ? `Showing ${firstItem}–${lastItem} of ${pagination.totalItems}`
-            : 'No records to display'}
+              {!loading &&
+                result?.items.map((item) => (
+                  <CaseRow
+                    key={item.caseId}
+                    item={item}
+                    onSelect={
+                      setSelectedCaseId
+                    }
+                  />
+                ))}
+            </tbody>
+          </table>
         </div>
 
-        <div className="crime-records__pagination-controls">
-          <button
-            type="button"
-            onClick={() =>
-              setPage((current) =>
-                Math.max(1, current - 1),
-              )
-            }
-            disabled={
-              loading ||
-              !pagination ||
-              pagination.page <= 1
-            }
-          >
-            Previous
-          </button>
+        <div className="crime-records__pagination">
+          <div>
+            {pagination &&
+            pagination.totalItems > 0
+              ? `Showing ${firstItem}–${lastItem} of ${pagination.totalItems}`
+              : 'No records to display'}
+          </div>
 
-          <span>
-            Page {pagination?.page ?? 1}
-            {' / '}
-            {Math.max(
-              pagination?.totalPages ?? 1,
-              1,
-            )}
-          </span>
+          <div className="crime-records__pagination-controls">
+            <button
+              type="button"
+              onClick={() =>
+                setPage((current) =>
+                  Math.max(
+                    1,
+                    current - 1,
+                  ),
+                )
+              }
+              disabled={
+                loading ||
+                !pagination ||
+                pagination.page <= 1
+              }
+            >
+              Previous
+            </button>
 
-          <button
-            type="button"
-            onClick={() =>
-              setPage((current) =>
-                current + 1,
-              )
-            }
-            disabled={
-              loading ||
-              !pagination ||
-              pagination.totalPages === 0 ||
-              pagination.page >=
-                pagination.totalPages
-            }
-          >
-            Next
-          </button>
+            <span>
+              Page{' '}
+              {pagination?.page ?? 1}
+              {' / '}
+              {Math.max(
+                pagination?.totalPages ??
+                  1,
+                1,
+              )}
+            </span>
+
+            <button
+              type="button"
+              onClick={() =>
+                setPage(
+                  (current) =>
+                    current + 1,
+                )
+              }
+              disabled={
+                loading ||
+                !pagination ||
+                pagination.totalPages ===
+                  0 ||
+                pagination.page >=
+                  pagination.totalPages
+              }
+            >
+              Next
+            </button>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <CaseDetailDrawer
+        caseId={selectedCaseId}
+        onClose={() =>
+          setSelectedCaseId(null)
+        }
+      />
+    </>
   );
 }

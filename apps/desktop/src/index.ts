@@ -1,6 +1,15 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import type { ApiHealth } from '@kavach/shared-types';
 
+import {
+  fetchCaseById,
+  fetchCaseList,
+} from './case-api-client';
+
+import type {
+  CaseListRequest,
+} from './types/case-bridge';
+
 // Handle creating/removing shortcuts on Windows during installation.
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -59,6 +68,22 @@ async function requestApiHealth(): Promise<ApiHealth> {
 }
 
 function registerIpcHandlers(): void {
+  ipcMain.handle(
+    'kavach:cases:list',
+    (
+      _event,
+      request?: CaseListRequest,
+    ) => fetchCaseList(request),
+  );
+
+  ipcMain.handle(
+    'kavach:cases:get-by-id',
+    (
+      _event,
+      caseId: number,
+    ) => fetchCaseById(caseId),
+  );
+
   ipcMain.handle(
     IPC_CHANNELS.getRuntimeInfo,
     () => ({

@@ -295,3 +295,32 @@
     max-width: 100%;
   }
 }
+
+.crime-records__row {
+  cursor: pointer;
+  outline: none;
+}
+
+.crime-records__row:focus {
+  background:
+    rgba(117, 223, 196, 0.06);
+  box-shadow:
+    inset 3px 0 0 #75dfc4;
+}
+
+.crime-records__row:focus-visible {
+  outline:
+    1px solid rgba(117, 223, 196, 0.55);
+  outline-offset: -2px;
+}
+
+.crime-records__inspect {
+  padding: 7px 10px !important;
+  border-color:
+    rgba(117, 223, 196, 0.22) !important;
+  background:
+    rgba(117, 223, 196, 0.07) !important;
+  color: #92ead5 !important;
+  font-size: 11px !important;
+  white-space: nowrap;
+}

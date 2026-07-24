@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { KavachDesktopApi } from './types/desktop-api';
+import type { CaseListRequest } from './types/case-bridge';
 
 const IPC_CHANNELS = {
   getRuntimeInfo: 'kavach:system:get-runtime-info',
@@ -11,11 +12,21 @@ const IPC_CHANNELS = {
 
 const kavachDesktopApi: KavachDesktopApi = {
   cases: {
-    list: (request) =>
-      ipcRenderer.invoke(IPC_CHANNELS.listCases, request),
+    list: (
+      request?: CaseListRequest,
+    ) =>
+      ipcRenderer.invoke(
+        'kavach:cases:list',
+        request,
+      ),
 
-    getById: (caseId) =>
-      ipcRenderer.invoke(IPC_CHANNELS.getCaseById, caseId),
+    getById: (
+      caseId: number,
+    ) =>
+      ipcRenderer.invoke(
+        'kavach:cases:get-by-id',
+        caseId,
+      ),
   },
 
   system: {
