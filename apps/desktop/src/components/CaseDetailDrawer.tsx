@@ -45,6 +45,37 @@ function formatDate(
   ).format(date);
 }
 
+function formatReliability(
+  score: number | null,
+): string {
+  if (score === null) {
+    return 'Not assessed';
+  }
+
+  return `${Math.round(score * 100)}%`;
+}
+
+function createReliabilityClass(
+  score: number | null,
+): string {
+  const base =
+    'case-detail__reliability';
+
+  if (score === null) {
+    return base;
+  }
+
+  if (score >= 0.8) {
+    return `${base} ${base}--high`;
+  }
+
+  if (score >= 0.5) {
+    return `${base} ${base}--medium`;
+  }
+
+  return `${base} ${base}--low`;
+}
+
 function formatDateTime(
   value: string | null,
 ): string {
@@ -814,6 +845,229 @@ export function CaseDetailDrawer({
                               'Unavailable'}
                           </strong>
                         </div>
+                      </article>
+                    ),
+                  )}
+                </div>
+              )}
+            </section>
+
+            <section className="case-detail__section">
+              <div className="case-detail__section-heading">
+                <div>
+                  <span>08</span>
+                  <h3>Case Timeline</h3>
+                </div>
+
+                <small>
+                  {detail.timeline.length}
+                  {' '}
+                  events
+                </small>
+              </div>
+
+              {detail.timeline.length === 0 ? (
+                <EmptyCollection message="No chronological case events are available." />
+              ) : (
+                <div className="case-detail__event-stream">
+                  {detail.timeline.map(
+                    (event) => (
+                      <article
+                        key={event.timelineEventId}
+                        className="case-detail__event"
+                      >
+                        <div
+                          className="case-detail__event-line"
+                          aria-hidden="true"
+                        >
+                          <span />
+                        </div>
+
+                        <div className="case-detail__event-content">
+                          <header>
+                            <div>
+                              <strong>
+                                {event.eventType}
+                              </strong>
+
+                              <span>
+                                {formatDateTime(
+                                  event.eventDateTime,
+                                )}
+                              </span>
+                            </div>
+
+                            <small>
+                              {event.sourceType}
+                            </small>
+                          </header>
+
+                          <p>
+                            {event.description ||
+                              'No event description is available.'}
+                          </p>
+
+                          <footer>
+                            Actor:{' '}
+                            <strong>
+                              {event.actor?.name ??
+                                'System or unknown'}
+                            </strong>
+                          </footer>
+                        </div>
+                      </article>
+                    ),
+                  )}
+                </div>
+              )}
+            </section>
+
+            <section className="case-detail__section">
+              <div className="case-detail__section-heading">
+                <div>
+                  <span>09</span>
+                  <h3>Case Narratives</h3>
+                </div>
+
+                <small>
+                  {detail.narratives.length}
+                  {' '}
+                  records
+                </small>
+              </div>
+
+              {detail.narratives.length === 0 ? (
+                <EmptyCollection message="No extended narrative records are available." />
+              ) : (
+                <div className="case-detail__narratives">
+                  {detail.narratives.map(
+                    (narrative, index) => (
+                      <article
+                        key={
+                          `${narrative.languageCode}-` +
+                          `${narrative.sourceType}-` +
+                          index
+                        }
+                      >
+                        <header>
+                          <div>
+                            <span>
+                              Language
+                            </span>
+
+                            <strong>
+                              {narrative.languageCode}
+                            </strong>
+                          </div>
+
+                          <div>
+                            <span>
+                              Source
+                            </span>
+
+                            <strong>
+                              {narrative.sourceType}
+                            </strong>
+                          </div>
+
+                          <div>
+                            <span>
+                              Origin
+                            </span>
+
+                            <strong>
+                              {narrative.dataOrigin}
+                            </strong>
+                          </div>
+                        </header>
+
+                        <p>
+                          {narrative.narrativeText ||
+                            'Narrative text unavailable.'}
+                        </p>
+                      </article>
+                    ),
+                  )}
+                </div>
+              )}
+            </section>
+
+            <section className="case-detail__section">
+              <div className="case-detail__section-heading">
+                <div>
+                  <span>10</span>
+                  <h3>Evidence Register</h3>
+                </div>
+
+                <small>
+                  {detail.evidenceItems.length}
+                  {' '}
+                  items
+                </small>
+              </div>
+
+              {detail.evidenceItems.length === 0 ? (
+                <EmptyCollection message="No evidence records are attached to this case." />
+              ) : (
+                <div className="case-detail__evidence-list">
+                  {detail.evidenceItems.map(
+                    (evidence) => (
+                      <article
+                        key={evidence.evidenceId}
+                        className="case-detail__evidence"
+                      >
+                        <header>
+                          <div>
+                            <span>
+                              Evidence #{evidence.evidenceId}
+                            </span>
+
+                            <strong>
+                              {evidence.evidenceType}
+                            </strong>
+                          </div>
+
+                          <span
+                            className={createReliabilityClass(
+                              evidence.reliabilityScore,
+                            )}
+                          >
+                            Reliability{' '}
+                            {formatReliability(
+                              evidence.reliabilityScore,
+                            )}
+                          </span>
+                        </header>
+
+                        <p>
+                          {evidence.description ||
+                            'No evidence description is available.'}
+                        </p>
+
+                        <footer>
+                          <div>
+                            <span>
+                              Collected
+                            </span>
+
+                            <strong>
+                              {formatDateTime(
+                                evidence.collectedDateTime,
+                              )}
+                            </strong>
+                          </div>
+
+                          <div>
+                            <span>
+                              Data origin
+                            </span>
+
+                            <strong>
+                              {evidence.dataOrigin ||
+                                'Unavailable'}
+                            </strong>
+                          </div>
+                        </footer>
                       </article>
                     ),
                   )}
