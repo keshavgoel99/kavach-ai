@@ -202,3 +202,35 @@ export interface CaseFilterOptions {
   minorCrimeHeads:
     CaseMinorCrimeHeadFilterOption[];
 }
+
+export interface CaseDashboardBreakdownItem
+  extends NumericLookupReference {
+  count: number;
+  percentage: number;
+}
+
+export interface CaseDashboardDateCoverage {
+  from: IsoDateString | null;
+  to: IsoDateString | null;
+}
+
+export interface CaseDashboardSummary {
+  totalCases: number;
+
+  dateCoverage: CaseDashboardDateCoverage;
+
+  casesWithArrestEvents: number;
+  casesWithChargesheets: number;
+
+  statusBreakdown:
+    CaseDashboardBreakdownItem[];
+
+  gravityBreakdown:
+    CaseDashboardBreakdownItem[];
+
+  topDistricts:
+    CaseDashboardBreakdownItem[];
+
+  topCrimeHeads:
+    CaseDashboardBreakdownItem[];
+}

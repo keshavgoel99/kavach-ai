@@ -95,6 +95,26 @@ export function createCaseRouter(): Router {
   );
 
   router.get(
+    '/dashboard-summary',
+    async (
+      _request,
+      response,
+      next,
+    ) => {
+      try {
+        const repository =
+          await getCaseRepository();
+
+        response.status(200).json(
+          repository.getDashboardSummary(),
+        );
+      } catch (error: unknown) {
+        next(error);
+      }
+    },
+  );
+
+  router.get(
     '/:caseId',
     async (
       request,

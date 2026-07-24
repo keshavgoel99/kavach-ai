@@ -3,6 +3,8 @@ import type {
   CaseArrestEvent,
   CaseChargesheet,
   CaseComplainant,
+  CaseDashboardBreakdownItem,
+  CaseDashboardSummary,
   CaseDetail,
   CaseFilterOptions,
   CaseLegalSection,
@@ -256,6 +258,67 @@ function sortFilterOptions<
   );
 }
 
+interface LookupCount {
+  id: number;
+  name: string;
+  count: number;
+}
+
+function incrementLookupCount(
+  counts: Map<number, LookupCount>,
+  lookup: NumericLookupReference,
+): void {
+  const existing = counts.get(lookup.id);
+
+  if (existing) {
+    existing.count += 1;
+    return;
+  }
+
+  counts.set(lookup.id, {
+    id: lookup.id,
+    name: lookup.name,
+    count: 1,
+  });
+}
+
+function createBreakdown(
+  counts: ReadonlyMap<number, LookupCount>,
+  totalCases: number,
+  limit?: number,
+): CaseDashboardBreakdownItem[] {
+  const sorted = [...counts.values()].sort(
+    (left, right) =>
+      right.count - left.count ||
+      left.name.localeCompare(
+        right.name,
+        'en-IN',
+      ) ||
+      left.id - right.id,
+  );
+
+  const selected =
+    limit === undefined
+      ? sorted
+      : sorted.slice(0, limit);
+
+  return selected.map((item) => ({
+    id: item.id,
+    name: item.name,
+    count: item.count,
+
+    percentage:
+      totalCases === 0
+        ? 0
+        : Number(
+            (
+              (item.count / totalCases) *
+              100
+            ).toFixed(1),
+          ),
+  }));
+}
+
 export class CaseRepository {
   private readonly caseRecordsById =
     new Map<number, CaseMasterRecord>();
@@ -494,6 +557,117 @@ export class CaseRepository {
 
       return right.caseId - left.caseId;
     });
+  }
+
+  public getDashboardSummary(): CaseDashboardSummary {
+    const totalCases =
+      this.sortedSummaries.length;
+
+    const statusCounts =
+      new Map<number, LookupCount>();
+
+    const gravityCounts =
+      new Map<number, LookupCount>();
+
+    const districtCounts =
+      new Map<number, LookupCount>();
+
+    const crimeHeadCounts =
+      new Map<number, LookupCount>();
+
+    let casesWithArrestEvents = 0;
+    let casesWithChargesheets = 0;
+
+    this.sortedSummaries.forEach(
+      (caseSummary) => {
+        incrementLookupCount(
+          statusCounts,
+          caseSummary.status,
+        );
+
+        incrementLookupCount(
+          gravityCounts,
+          caseSummary.gravity,
+        );
+
+        incrementLookupCount(
+          districtCounts,
+          caseSummary.district,
+        );
+
+        incrementLookupCount(
+          crimeHeadCounts,
+          caseSummary.majorCrimeHead,
+        );
+
+        if (
+          (
+            this.arrestsByCase.get(
+              caseSummary.caseId,
+            ) ?? []
+          ).length > 0
+        ) {
+          casesWithArrestEvents += 1;
+        }
+
+        if (
+          (
+            this.chargesheetsByCase.get(
+              caseSummary.caseId,
+            ) ?? []
+          ).length > 0
+        ) {
+          casesWithChargesheets += 1;
+        }
+      },
+    );
+
+    const latestCase =
+      this.sortedSummaries[0];
+
+    const earliestCase =
+      this.sortedSummaries[
+        this.sortedSummaries.length - 1
+      ];
+
+    return {
+      totalCases,
+
+      dateCoverage: {
+        from:
+          earliestCase?.registeredDate ??
+          null,
+
+        to:
+          latestCase?.registeredDate ??
+          null,
+      },
+
+      casesWithArrestEvents,
+      casesWithChargesheets,
+
+      statusBreakdown: createBreakdown(
+        statusCounts,
+        totalCases,
+      ),
+
+      gravityBreakdown: createBreakdown(
+        gravityCounts,
+        totalCases,
+      ),
+
+      topDistricts: createBreakdown(
+        districtCounts,
+        totalCases,
+        5,
+      ),
+
+      topCrimeHeads: createBreakdown(
+        crimeHeadCounts,
+        totalCases,
+        5,
+      ),
+    };
   }
 
   public getFilterOptions(): CaseFilterOptions {

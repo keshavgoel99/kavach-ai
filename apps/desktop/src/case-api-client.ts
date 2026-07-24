@@ -1,5 +1,6 @@
 import type {
   ApiErrorResponse,
+  CaseDashboardSummary,
   CaseDetail,
   CaseFilterOptions,
   CaseListResponse,
@@ -194,5 +195,11 @@ export async function fetchCaseById(
 export async function fetchCaseFilterOptions(): Promise<CaseFilterOptions> {
   return requestJson<CaseFilterOptions>(
     '/cases/filter-options',
+  );
+}
+
+export async function fetchCaseDashboardSummary(): Promise<CaseDashboardSummary> {
+  return requestJson<CaseDashboardSummary>(
+    '/cases/dashboard-summary',
   );
 }

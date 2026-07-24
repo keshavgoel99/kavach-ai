@@ -32,6 +32,11 @@ const kavachDesktopApi: KavachDesktopApi = {
       ipcRenderer.invoke(
         'kavach:cases:get-filter-options',
       ),
+
+    getDashboardSummary: () =>
+      ipcRenderer.invoke(
+        'kavach:cases:get-dashboard-summary',
+      ),
   },
 
   system: {

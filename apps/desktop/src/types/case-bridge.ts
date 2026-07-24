@@ -1,4 +1,5 @@
 import type {
+  CaseDashboardSummary,
   CaseDetail,
   CaseFilterOptions,
   CaseListFilters,
@@ -22,4 +23,7 @@ export interface CaseBridge {
 
   getFilterOptions():
     Promise<CaseFilterOptions>;
+
+  getDashboardSummary():
+    Promise<CaseDashboardSummary>;
 }
