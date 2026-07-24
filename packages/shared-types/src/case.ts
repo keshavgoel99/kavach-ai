@@ -175,6 +175,122 @@ export interface CaseEntitySourceLink {
   confidence: number | null;
 }
 
+export interface CaseEntityIdentifier {
+  identifierId: number;
+
+  identifierType: string;
+  identifierValue: string;
+
+  firstObservedDate: IsoDateString | null;
+  source: string;
+
+  relationshipType: string;
+  confidence: number | null;
+
+  directlyLinkedToCase: boolean;
+}
+
+export interface CaseEntityVehicle {
+  vehicleId: number;
+
+  registrationNumber: string;
+  vehicleType: string;
+  modelYear: number | null;
+  source: string;
+
+  relationshipType: string;
+  confidence: number | null;
+
+  directlyLinkedToCase: boolean;
+}
+
+export interface CaseEntityFinancialAccount {
+  accountId: number;
+
+  accountType: string;
+  maskedAccountNumber: string;
+  institutionName: string;
+
+  openDate: IsoDateString | null;
+  status: string;
+  source: string;
+
+  relationshipType: string;
+  confidence: number | null;
+}
+
+export interface CaseKnownAssociate {
+  associationId: number;
+
+  entityId: number;
+  canonicalName: string;
+
+  relationshipType: string;
+  observedCount: number;
+
+  confidence: number | null;
+  evidenceBasis: string | null;
+}
+
+export interface CaseGangMembership {
+  gangId: number;
+  gangName: string;
+
+  primaryCrimeType: string;
+  primaryLocationId: number | null;
+  status: string;
+
+  fromDate: IsoDateString | null;
+  role: string;
+  confidence: number | null;
+}
+
+export interface CaseLinkedIdentifier {
+  identifierId: number;
+
+  identifierType: string;
+  identifierValue: string;
+
+  firstObservedDate: IsoDateString | null;
+  source: string;
+
+  relationshipType: string;
+  confidence: number | null;
+}
+
+export interface CaseLinkedVehicle {
+  vehicleId: number;
+
+  registrationNumber: string;
+  vehicleType: string;
+  modelYear: number | null;
+  source: string;
+
+  relationshipType: string;
+  confidence: number | null;
+}
+
+export interface CaseFinancialTransaction {
+  transactionId: number;
+
+  fromAccountId: number | null;
+  toAccountId: number | null;
+
+  transactionDateTime: IsoDateTimeString;
+
+  amount: number;
+  currency: string;
+  channel: string;
+
+  suspicious: boolean;
+  riskScore: number | null;
+
+  narrative: string | null;
+
+  relationshipType: string;
+  confidence: number | null;
+}
+
 export interface CaseResolvedEntity {
   entityId: number;
   canonicalName: string;
@@ -201,6 +317,17 @@ export interface CaseResolvedEntity {
   roles: string[];
 
   sourceLinks: CaseEntitySourceLink[];
+
+  identifiers: CaseEntityIdentifier[];
+  vehicles: CaseEntityVehicle[];
+
+  financialAccounts:
+    CaseEntityFinancialAccount[];
+
+  knownAssociates: CaseKnownAssociate[];
+
+  gangMemberships:
+    CaseGangMembership[];
 }
 
 export interface CaseDetail extends CaseSummary {
@@ -213,6 +340,12 @@ export interface CaseDetail extends CaseSummary {
   accused: CaseAccused[];
 
   resolvedEntities: CaseResolvedEntity[];
+
+  caseIdentifiers: CaseLinkedIdentifier[];
+  caseVehicles: CaseLinkedVehicle[];
+
+  caseFinancialTransactions:
+    CaseFinancialTransaction[];
 
   legalSections: CaseLegalSection[];
   arrestEvents: CaseArrestEvent[];

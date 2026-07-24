@@ -6,10 +6,18 @@ import type {
   CaseDashboardBreakdownItem,
   CaseDashboardSummary,
   CaseDetail,
+  CaseEntityFinancialAccount,
+  CaseEntityIdentifier,
   CaseEntitySourceLink,
+  CaseEntityVehicle,
   CaseEvidenceItem,
   CaseFilterOptions,
+  CaseFinancialTransaction,
+  CaseGangMembership,
+  CaseKnownAssociate,
   CaseLegalSection,
+  CaseLinkedIdentifier,
+  CaseLinkedVehicle,
   CaseListFilters,
   CaseListResponse,
   CaseLocation,
@@ -77,6 +85,45 @@ type NarrativeRow =
 type EvidenceRow =
   RawTables['EvidenceItem'][number];
 
+type DigitalIdentifierRow =
+  RawTables['DigitalIdentifier'][number];
+
+type PersonIdentifierLinkRow =
+  RawTables['PersonIdentifierLink'][number];
+
+type VehicleRow =
+  RawTables['Vehicle'][number];
+
+type PersonVehicleLinkRow =
+  RawTables['PersonVehicleLink'][number];
+
+type FinancialAccountRow =
+  RawTables['FinancialAccount'][number];
+
+type PersonAccountLinkRow =
+  RawTables['PersonAccountLink'][number];
+
+type FinancialTransactionRow =
+  RawTables['FinancialTransaction'][number];
+
+type CaseIdentifierLinkRow =
+  RawTables['CaseIdentifierLink'][number];
+
+type CaseVehicleLinkRow =
+  RawTables['CaseVehicleLink'][number];
+
+type CaseFinancialLinkRow =
+  RawTables['CaseFinancialLink'][number];
+
+type KnownAssociationRow =
+  RawTables['KnownAssociation'][number];
+
+type GangRow =
+  RawTables['Gang'][number];
+
+type GangMembershipRow =
+  RawTables['GangMembership'][number];
+
 function toInteger(
   value: string,
   label: string,
@@ -126,6 +173,24 @@ function toNullableDecimal(
   if (!Number.isFinite(parsed)) {
     throw new Error(
       `${label} must contain a finite decimal value.`,
+    );
+  }
+
+  return parsed;
+}
+
+function toRequiredDecimal(
+  value: string,
+  label: string,
+): number {
+  const parsed = toNullableDecimal(
+    value,
+    label,
+  );
+
+  if (parsed === null) {
+    throw new Error(
+      `${label} cannot be empty.`,
     );
   }
 
@@ -466,6 +531,11 @@ export class CaseRepository {
   private readonly unitRows;
   private readonly locationRows;
   private readonly personEntityRows;
+  private readonly digitalIdentifierRows;
+  private readonly vehicleRows;
+  private readonly financialAccountRows;
+  private readonly financialTransactionRows;
+  private readonly gangRows;
 
   private readonly actLookup =
     new Map<string, LegalReference>();
@@ -487,6 +557,17 @@ export class CaseRepository {
   private readonly timelineByCase;
   private readonly narrativesByCase;
   private readonly evidenceByCase;
+
+  private readonly identifierLinksByEntity;
+  private readonly vehicleLinksByEntity;
+  private readonly accountLinksByEntity;
+
+  private readonly caseIdentifierLinksByCase;
+  private readonly caseVehicleLinksByCase;
+  private readonly caseFinancialLinksByCase;
+
+  private readonly associationsByEntity;
+  private readonly gangMembershipsByEntity;
 
   constructor(
     private readonly dataset: LoadedCoreDataset,
@@ -598,6 +679,41 @@ export class CaseRepository {
         'PersonEntity',
       );
 
+    this.digitalIdentifierRows =
+      buildNumericRowMap(
+        tables.DigitalIdentifier,
+        'IdentifierID',
+        'DigitalIdentifier',
+      );
+
+    this.vehicleRows =
+      buildNumericRowMap(
+        tables.Vehicle,
+        'VehicleID',
+        'Vehicle',
+      );
+
+    this.financialAccountRows =
+      buildNumericRowMap(
+        tables.FinancialAccount,
+        'AccountID',
+        'FinancialAccount',
+      );
+
+    this.financialTransactionRows =
+      buildNumericRowMap(
+        tables.FinancialTransaction,
+        'TransactionID',
+        'FinancialTransaction',
+      );
+
+    this.gangRows =
+      buildNumericRowMap(
+        tables.Gang,
+        'GangID',
+        'Gang',
+      );
+
     tables.Act.forEach((row) => {
       this.actLookup.set(row.ActCode, {
         code: row.ActCode,
@@ -691,6 +807,96 @@ export class CaseRepository {
         'CaseMasterID',
         'EvidenceItem',
       );
+
+    this.identifierLinksByEntity =
+      groupRowsByInteger(
+        tables.PersonIdentifierLink,
+        'EntityID',
+        'PersonIdentifierLink',
+      );
+
+    this.vehicleLinksByEntity =
+      groupRowsByInteger(
+        tables.PersonVehicleLink,
+        'EntityID',
+        'PersonVehicleLink',
+      );
+
+    this.accountLinksByEntity =
+      groupRowsByInteger(
+        tables.PersonAccountLink,
+        'EntityID',
+        'PersonAccountLink',
+      );
+
+    this.caseIdentifierLinksByCase =
+      groupRowsByInteger(
+        tables.CaseIdentifierLink,
+        'CaseMasterID',
+        'CaseIdentifierLink',
+      );
+
+    this.caseVehicleLinksByCase =
+      groupRowsByInteger(
+        tables.CaseVehicleLink,
+        'CaseMasterID',
+        'CaseVehicleLink',
+      );
+
+    this.caseFinancialLinksByCase =
+      groupRowsByInteger(
+        tables.CaseFinancialLink,
+        'CaseMasterID',
+        'CaseFinancialLink',
+      );
+
+    this.gangMembershipsByEntity =
+      groupRowsByInteger(
+        tables.GangMembership,
+        'EntityID',
+        'GangMembership',
+      );
+
+    this.associationsByEntity =
+      new Map<number, KnownAssociationRow[]>();
+
+    tables.KnownAssociation.forEach(
+      (row: KnownAssociationRow) => {
+        const firstEntityId = toInteger(
+          row.EntityID1,
+          'KnownAssociation.EntityID1',
+        );
+
+        const secondEntityId = toInteger(
+          row.EntityID2,
+          'KnownAssociation.EntityID2',
+        );
+
+        const firstRows =
+          this.associationsByEntity.get(
+            firstEntityId,
+          ) ?? [];
+
+        firstRows.push(row);
+
+        this.associationsByEntity.set(
+          firstEntityId,
+          firstRows,
+        );
+
+        const secondRows =
+          this.associationsByEntity.get(
+            secondEntityId,
+          ) ?? [];
+
+        secondRows.push(row);
+
+        this.associationsByEntity.set(
+          secondEntityId,
+          secondRows,
+        );
+      },
+    );
 
     this.accusedByArrest =
       groupRowsByInteger(
@@ -1118,6 +1324,17 @@ export class CaseRepository {
       resolvedEntities:
         this.createResolvedEntities(caseId),
 
+      caseIdentifiers:
+        this.createCaseIdentifiers(caseId),
+
+      caseVehicles:
+        this.createCaseVehicles(caseId),
+
+      caseFinancialTransactions:
+        this.createCaseFinancialTransactions(
+          caseId,
+        ),
+
       legalSections:
         this.createLegalSections(caseId),
 
@@ -1428,6 +1645,486 @@ export class CaseRepository {
     });
   }
 
+  private createEntityIdentifiers(
+    entityId: number,
+    directlyLinkedIds: ReadonlySet<number>,
+  ): CaseEntityIdentifier[] {
+    const rows =
+      this.identifierLinksByEntity.get(
+        entityId,
+      ) ?? [];
+
+    return rows.map(
+      (link: PersonIdentifierLinkRow) => {
+        const identifierId = toInteger(
+          link.IdentifierID,
+          'PersonIdentifierLink.IdentifierID',
+        );
+
+        const identifier =
+          requireMapValue(
+            this.digitalIdentifierRows,
+            identifierId,
+            `DigitalIdentifier ${identifierId}`,
+          ) as DigitalIdentifierRow;
+
+        return {
+          identifierId,
+
+          identifierType:
+            identifier.IdentifierType.trim(),
+
+          identifierValue:
+            identifier.IdentifierValue.trim(),
+
+          firstObservedDate:
+            toNullableString(
+              identifier.FirstObservedDate,
+            ),
+
+          source:
+            identifier.Source.trim(),
+
+          relationshipType:
+            link.RelationshipType.trim(),
+
+          confidence: toConfidenceScore(
+            link.Confidence,
+            'PersonIdentifierLink.Confidence',
+          ),
+
+          directlyLinkedToCase:
+            directlyLinkedIds.has(
+              identifierId,
+            ),
+        };
+      },
+    );
+  }
+
+  private createEntityVehicles(
+    entityId: number,
+    directlyLinkedIds: ReadonlySet<number>,
+  ): CaseEntityVehicle[] {
+    const rows =
+      this.vehicleLinksByEntity.get(
+        entityId,
+      ) ?? [];
+
+    return rows.map(
+      (link: PersonVehicleLinkRow) => {
+        const vehicleId = toInteger(
+          link.VehicleID,
+          'PersonVehicleLink.VehicleID',
+        );
+
+        const vehicle =
+          requireMapValue(
+            this.vehicleRows,
+            vehicleId,
+            `Vehicle ${vehicleId}`,
+          ) as VehicleRow;
+
+        return {
+          vehicleId,
+
+          registrationNumber:
+            vehicle.RegistrationNo.trim(),
+
+          vehicleType:
+            vehicle.VehicleType.trim(),
+
+          modelYear: toNullableInteger(
+            vehicle.ModelYear,
+            'Vehicle.ModelYear',
+          ),
+
+          source:
+            vehicle.Source.trim(),
+
+          relationshipType:
+            link.RelationshipType.trim(),
+
+          confidence: toConfidenceScore(
+            link.Confidence,
+            'PersonVehicleLink.Confidence',
+          ),
+
+          directlyLinkedToCase:
+            directlyLinkedIds.has(vehicleId),
+        };
+      },
+    );
+  }
+
+  private createEntityAccounts(
+    entityId: number,
+  ): CaseEntityFinancialAccount[] {
+    const rows =
+      this.accountLinksByEntity.get(
+        entityId,
+      ) ?? [];
+
+    return rows.map(
+      (link: PersonAccountLinkRow) => {
+        const accountId = toInteger(
+          link.AccountID,
+          'PersonAccountLink.AccountID',
+        );
+
+        const account =
+          requireMapValue(
+            this.financialAccountRows,
+            accountId,
+            `FinancialAccount ${accountId}`,
+          ) as FinancialAccountRow;
+
+        return {
+          accountId,
+
+          accountType:
+            account.AccountType.trim(),
+
+          maskedAccountNumber:
+            account.MaskedAccountNo.trim(),
+
+          institutionName:
+            account.InstitutionName.trim(),
+
+          openDate:
+            toNullableString(
+              account.OpenDate,
+            ),
+
+          status:
+            account.Status.trim(),
+
+          source:
+            account.Source.trim(),
+
+          relationshipType:
+            link.RelationshipType.trim(),
+
+          confidence: toConfidenceScore(
+            link.Confidence,
+            'PersonAccountLink.Confidence',
+          ),
+        };
+      },
+    );
+  }
+
+  private createKnownAssociates(
+    entityId: number,
+  ): CaseKnownAssociate[] {
+    const rows =
+      this.associationsByEntity.get(
+        entityId,
+      ) ?? [];
+
+    return rows.map(
+      (row: KnownAssociationRow) => {
+        const firstEntityId = toInteger(
+          row.EntityID1,
+          'KnownAssociation.EntityID1',
+        );
+
+        const secondEntityId = toInteger(
+          row.EntityID2,
+          'KnownAssociation.EntityID2',
+        );
+
+        const associateId =
+          firstEntityId === entityId
+            ? secondEntityId
+            : firstEntityId;
+
+        const associate =
+          requireMapValue(
+            this.personEntityRows,
+            associateId,
+            `PersonEntity ${associateId}`,
+          ) as PersonEntityRow;
+
+        return {
+          associationId: toInteger(
+            row.AssociationID,
+            'KnownAssociation.AssociationID',
+          ),
+
+          entityId: associateId,
+
+          canonicalName:
+            associate.CanonicalName.trim(),
+
+          relationshipType:
+            row.RelationshipType.trim(),
+
+          observedCount: toInteger(
+            row.ObservedCount,
+            'KnownAssociation.ObservedCount',
+          ),
+
+          confidence: toConfidenceScore(
+            row.Confidence,
+            'KnownAssociation.Confidence',
+          ),
+
+          evidenceBasis:
+            toNullableString(
+              row.EvidenceBasis,
+            ),
+        };
+      },
+    );
+  }
+
+  private createGangMemberships(
+    entityId: number,
+  ): CaseGangMembership[] {
+    const rows =
+      this.gangMembershipsByEntity.get(
+        entityId,
+      ) ?? [];
+
+    return rows.map(
+      (membership: GangMembershipRow) => {
+        const gangId = toInteger(
+          membership.GangID,
+          'GangMembership.GangID',
+        );
+
+        const gang =
+          requireMapValue(
+            this.gangRows,
+            gangId,
+            `Gang ${gangId}`,
+          ) as GangRow;
+
+        return {
+          gangId,
+
+          gangName:
+            gang.GangName.trim(),
+
+          primaryCrimeType:
+            gang.PrimaryCrimeType.trim(),
+
+          primaryLocationId:
+            toNullableInteger(
+              gang.PrimaryLocationID,
+              'Gang.PrimaryLocationID',
+            ),
+
+          status:
+            gang.Status.trim(),
+
+          fromDate:
+            toNullableString(
+              membership.FromDate,
+            ),
+
+          role:
+            membership.Role.trim(),
+
+          confidence: toConfidenceScore(
+            membership.Confidence,
+            'GangMembership.Confidence',
+          ),
+        };
+      },
+    );
+  }
+
+  private createCaseIdentifiers(
+    caseId: number,
+  ): CaseLinkedIdentifier[] {
+    const rows =
+      this.caseIdentifierLinksByCase.get(
+        caseId,
+      ) ?? [];
+
+    return rows.map(
+      (link: CaseIdentifierLinkRow) => {
+        const identifierId = toInteger(
+          link.IdentifierID,
+          'CaseIdentifierLink.IdentifierID',
+        );
+
+        const identifier =
+          requireMapValue(
+            this.digitalIdentifierRows,
+            identifierId,
+            `DigitalIdentifier ${identifierId}`,
+          ) as DigitalIdentifierRow;
+
+        return {
+          identifierId,
+
+          identifierType:
+            identifier.IdentifierType.trim(),
+
+          identifierValue:
+            identifier.IdentifierValue.trim(),
+
+          firstObservedDate:
+            toNullableString(
+              identifier.FirstObservedDate,
+            ),
+
+          source:
+            identifier.Source.trim(),
+
+          relationshipType:
+            link.RelationshipType.trim(),
+
+          confidence: toConfidenceScore(
+            link.Confidence,
+            'CaseIdentifierLink.Confidence',
+          ),
+        };
+      },
+    );
+  }
+
+  private createCaseVehicles(
+    caseId: number,
+  ): CaseLinkedVehicle[] {
+    const rows =
+      this.caseVehicleLinksByCase.get(
+        caseId,
+      ) ?? [];
+
+    return rows.map(
+      (link: CaseVehicleLinkRow) => {
+        const vehicleId = toInteger(
+          link.VehicleID,
+          'CaseVehicleLink.VehicleID',
+        );
+
+        const vehicle =
+          requireMapValue(
+            this.vehicleRows,
+            vehicleId,
+            `Vehicle ${vehicleId}`,
+          ) as VehicleRow;
+
+        return {
+          vehicleId,
+
+          registrationNumber:
+            vehicle.RegistrationNo.trim(),
+
+          vehicleType:
+            vehicle.VehicleType.trim(),
+
+          modelYear: toNullableInteger(
+            vehicle.ModelYear,
+            'Vehicle.ModelYear',
+          ),
+
+          source:
+            vehicle.Source.trim(),
+
+          relationshipType:
+            link.RelationshipType.trim(),
+
+          confidence: toConfidenceScore(
+            link.Confidence,
+            'CaseVehicleLink.Confidence',
+          ),
+        };
+      },
+    );
+  }
+
+  private createCaseFinancialTransactions(
+    caseId: number,
+  ): CaseFinancialTransaction[] {
+    const rows =
+      this.caseFinancialLinksByCase.get(
+        caseId,
+      ) ?? [];
+
+    return rows
+      .map((link: CaseFinancialLinkRow) => {
+        const transactionId = toInteger(
+          link.TransactionID,
+          'CaseFinancialLink.TransactionID',
+        );
+
+        const transaction =
+          requireMapValue(
+            this.financialTransactionRows,
+            transactionId,
+            `FinancialTransaction ${transactionId}`,
+          ) as FinancialTransactionRow;
+
+        return {
+          transactionId,
+
+          fromAccountId:
+            toNullableInteger(
+              transaction.FromAccountID,
+              'FinancialTransaction.FromAccountID',
+            ),
+
+          toAccountId:
+            toNullableInteger(
+              transaction.ToAccountID,
+              'FinancialTransaction.ToAccountID',
+            ),
+
+          transactionDateTime:
+            normalizeDateTime(
+              transaction.TransactionDateTime,
+            ),
+
+          amount: toRequiredDecimal(
+            transaction.Amount,
+            'FinancialTransaction.Amount',
+          ),
+
+          currency:
+            transaction.Currency.trim(),
+
+          channel:
+            transaction.Channel.trim(),
+
+          suspicious: toRequiredBoolean(
+            transaction.SuspiciousFlag,
+            'FinancialTransaction.SuspiciousFlag',
+          ),
+
+          riskScore: toConfidenceScore(
+            transaction.RiskScore,
+            'FinancialTransaction.RiskScore',
+          ),
+
+          narrative:
+            toNullableString(
+              transaction.Narrative,
+            ),
+
+          relationshipType:
+            link.RelationshipType.trim(),
+
+          confidence: toConfidenceScore(
+            link.Confidence,
+            'CaseFinancialLink.Confidence',
+          ),
+        };
+      })
+      .sort(
+        (left, right) =>
+          left.transactionDateTime.localeCompare(
+            right.transactionDateTime,
+          ) ||
+          left.transactionId -
+            right.transactionId,
+      );
+  }
+
   private createResolvedEntities(
     caseId: number,
   ): CaseResolvedEntity[] {
@@ -1438,6 +2135,34 @@ export class CaseRepository {
       this.casePartyEntityLinksByCase.get(
         caseId,
       ) ?? [];
+
+    const directlyLinkedIdentifierIds =
+      new Set(
+        (
+          this.caseIdentifierLinksByCase.get(
+            caseId,
+          ) ?? []
+        ).map((row: CaseIdentifierLinkRow) =>
+          toInteger(
+            row.IdentifierID,
+            'CaseIdentifierLink.IdentifierID',
+          ),
+        ),
+      );
+
+    const directlyLinkedVehicleIds =
+      new Set(
+        (
+          this.caseVehicleLinksByCase.get(
+            caseId,
+          ) ?? []
+        ).map((row: CaseVehicleLinkRow) =>
+          toInteger(
+            row.VehicleID,
+            'CaseVehicleLink.VehicleID',
+          ),
+        ),
+      );
 
     const accusedIdsByEntity =
       new Map<number, number[]>();
@@ -1689,6 +2414,27 @@ export class CaseRepository {
                 link,
               ),
           ),
+
+          identifiers:
+            this.createEntityIdentifiers(
+              entityId,
+              directlyLinkedIdentifierIds,
+            ),
+
+          vehicles:
+            this.createEntityVehicles(
+              entityId,
+              directlyLinkedVehicleIds,
+            ),
+
+          financialAccounts:
+            this.createEntityAccounts(entityId),
+
+          knownAssociates:
+            this.createKnownAssociates(entityId),
+
+          gangMemberships:
+            this.createGangMemberships(entityId),
         };
       })
       .sort(
