@@ -6,6 +6,7 @@ import type {
   CaseDashboardBreakdownItem,
   CaseDashboardSummary,
   CaseDetail,
+  CaseEntitySourceLink,
   CaseEvidenceItem,
   CaseFilterOptions,
   CaseLegalSection,
@@ -13,6 +14,7 @@ import type {
   CaseListResponse,
   CaseLocation,
   CaseNarrative,
+  CaseResolvedEntity,
   CaseSummary,
   CaseTimelineEvent,
   CaseVictim,
@@ -38,6 +40,15 @@ type RawTables =
 
 type AccusedRow =
   RawTables['Accused'][number];
+
+type PersonEntityRow =
+  RawTables['PersonEntity'][number];
+
+type AccusedEntityLinkRow =
+  RawTables['AccusedEntityLink'][number];
+
+type CasePartyEntityLinkRow =
+  RawTables['CasePartyEntityLink'][number];
 
 type VictimRow =
   RawTables['Victim'][number];
@@ -121,6 +132,31 @@ function toNullableDecimal(
   return parsed;
 }
 
+function toConfidenceScore(
+  value: string,
+  label: string,
+): number | null {
+  const confidence = toNullableDecimal(
+    value,
+    label,
+  );
+
+  if (confidence === null) {
+    return null;
+  }
+
+  if (
+    confidence < 0 ||
+    confidence > 1
+  ) {
+    throw new Error(
+      `${label} must be between 0 and 1.`,
+    );
+  }
+
+  return confidence;
+}
+
 function toReliabilityScore(
   value: string,
   label: string,
@@ -147,23 +183,50 @@ function toNullableBoolean(
   value: string,
   label: string,
 ): boolean | null {
-  const cleaned = value.trim().toLowerCase();
+  const cleaned = value.trim();
 
   if (!cleaned) {
     return null;
   }
 
-  if (cleaned === '1' || cleaned === 'true') {
+  const normalized =
+    cleaned.toLowerCase();
+
+  if (
+    normalized === 'true' ||
+    normalized === '1'
+  ) {
     return true;
   }
 
-  if (cleaned === '0' || cleaned === 'false') {
+  if (
+    normalized === 'false' ||
+    normalized === '0'
+  ) {
     return false;
   }
 
   throw new Error(
-    `${label} must contain a boolean value.`,
+    `${label} must be a valid boolean value.`,
   );
+}
+
+function toRequiredBoolean(
+  value: string,
+  label: string,
+): boolean {
+  const parsed = toNullableBoolean(
+    value,
+    label,
+  );
+
+  if (parsed === null) {
+    throw new Error(
+      `${label} cannot be empty.`,
+    );
+  }
+
+  return parsed;
 }
 
 function toNullableString(
@@ -402,6 +465,7 @@ export class CaseRepository {
 
   private readonly unitRows;
   private readonly locationRows;
+  private readonly personEntityRows;
 
   private readonly actLookup =
     new Map<string, LegalReference>();
@@ -412,6 +476,9 @@ export class CaseRepository {
   private readonly accusedByCase;
   private readonly victimsByCase;
   private readonly complainantsByCase;
+
+  private readonly accusedEntityLinksByAccused;
+  private readonly casePartyEntityLinksByCase;
   private readonly legalSectionsByCase;
   private readonly arrestsByCase;
   private readonly chargesheetsByCase;
@@ -524,6 +591,13 @@ export class CaseRepository {
       'LocationMaster',
     );
 
+    this.personEntityRows =
+      buildNumericRowMap(
+        tables.PersonEntity,
+        'EntityID',
+        'PersonEntity',
+      );
+
     tables.Act.forEach((row) => {
       this.actLookup.set(row.ActCode, {
         code: row.ActCode,
@@ -561,6 +635,20 @@ export class CaseRepository {
         tables.ComplainantDetails,
         'CaseMasterID',
         'ComplainantDetails',
+      );
+
+    this.accusedEntityLinksByAccused =
+      groupRowsByInteger(
+        tables.AccusedEntityLink,
+        'AccusedMasterID',
+        'AccusedEntityLink',
+      );
+
+    this.casePartyEntityLinksByCase =
+      groupRowsByInteger(
+        tables.CasePartyEntityLink,
+        'CaseMasterID',
+        'CasePartyEntityLink',
       );
 
     this.legalSectionsByCase =
@@ -1027,6 +1115,9 @@ export class CaseRepository {
       accused:
         this.createAccused(caseId),
 
+      resolvedEntities:
+        this.createResolvedEntities(caseId),
+
       legalSections:
         this.createLegalSections(caseId),
 
@@ -1235,36 +1326,379 @@ export class CaseRepository {
     }));
   }
 
+  private findAccusedEntityLink(
+    accusedId: number,
+  ): AccusedEntityLinkRow | null {
+    const links =
+      this.accusedEntityLinksByAccused.get(
+        accusedId,
+      ) ?? [];
+
+    if (links.length === 0) {
+      return null;
+    }
+
+    return [...links].sort(
+      (left, right) => {
+        const leftConfidence =
+          toConfidenceScore(
+            left.Confidence,
+            'AccusedEntityLink.Confidence',
+          ) ?? -1;
+
+        const rightConfidence =
+          toConfidenceScore(
+            right.Confidence,
+            'AccusedEntityLink.Confidence',
+          ) ?? -1;
+
+        return (
+          rightConfidence -
+          leftConfidence
+        );
+      },
+    )[0] ?? null;
+  }
+
+  private createEntitySourceLink(
+    row: CasePartyEntityLinkRow,
+  ): CaseEntitySourceLink {
+    return {
+      role: row.Role.trim(),
+
+      sourceTable:
+        row.SourceTable.trim(),
+
+      sourceRecordId: toInteger(
+        row.SourceRecordID,
+        'CasePartyEntityLink.SourceRecordID',
+      ),
+
+      confidence: toConfidenceScore(
+        row.Confidence,
+        'CasePartyEntityLink.Confidence',
+      ),
+    };
+  }
+
   private createAccused(
     caseId: number,
   ): CaseAccused[] {
     const rows =
       this.accusedByCase.get(caseId) ?? [];
 
-    return rows.map((row: AccusedRow) => ({
-      id: toInteger(
+    return rows.map((row: AccusedRow) => {
+      const accusedId = toInteger(
         row.AccusedMasterID,
         'Accused.AccusedMasterID',
-      ),
+      );
 
-      name: row.AccusedName,
+      const entityLink =
+        this.findAccusedEntityLink(
+          accusedId,
+        );
 
-      age: toNullableInteger(
-        row.AgeYear,
-        'Accused.AgeYear',
-      ),
+      return {
+        id: accusedId,
 
-      gender: this.optionalLookup(
-        this.genderLookup,
-        row.GenderID,
-        'Accused.GenderID',
-      ),
+        name: row.AccusedName,
 
-      personCode:
-        toNullableString(row.PersonID),
+        age: toNullableInteger(
+          row.AgeYear,
+          'Accused.AgeYear',
+        ),
 
-      resolvedEntityId: null,
-    }));
+        gender: this.optionalLookup(
+          this.genderLookup,
+          row.GenderID,
+          'Accused.GenderID',
+        ),
+
+        personCode:
+          toNullableString(row.PersonID),
+
+        resolvedEntityId:
+          entityLink === null
+            ? null
+            : toInteger(
+                entityLink.EntityID,
+                'AccusedEntityLink.EntityID',
+              ),
+      };
+    });
+  }
+
+  private createResolvedEntities(
+    caseId: number,
+  ): CaseResolvedEntity[] {
+    const accusedRows =
+      this.accusedByCase.get(caseId) ?? [];
+
+    const casePartyLinks =
+      this.casePartyEntityLinksByCase.get(
+        caseId,
+      ) ?? [];
+
+    const accusedIdsByEntity =
+      new Map<number, number[]>();
+
+    const resolutionLinksByEntity =
+      new Map<
+        number,
+        AccusedEntityLinkRow[]
+      >();
+
+    accusedRows.forEach(
+      (accusedRow: AccusedRow) => {
+        const accusedId = toInteger(
+          accusedRow.AccusedMasterID,
+          'Accused.AccusedMasterID',
+        );
+
+        const link =
+          this.findAccusedEntityLink(
+            accusedId,
+          );
+
+        if (!link) {
+          return;
+        }
+
+        const entityId = toInteger(
+          link.EntityID,
+          'AccusedEntityLink.EntityID',
+        );
+
+        const accusedIds =
+          accusedIdsByEntity.get(
+            entityId,
+          ) ?? [];
+
+        accusedIds.push(accusedId);
+
+        accusedIdsByEntity.set(
+          entityId,
+          accusedIds,
+        );
+
+        const resolutionLinks =
+          resolutionLinksByEntity.get(
+            entityId,
+          ) ?? [];
+
+        resolutionLinks.push(link);
+
+        resolutionLinksByEntity.set(
+          entityId,
+          resolutionLinks,
+        );
+      },
+    );
+
+    const partyLinksByEntity =
+      new Map<
+        number,
+        CasePartyEntityLinkRow[]
+      >();
+
+    casePartyLinks.forEach(
+      (partyLink: CasePartyEntityLinkRow) => {
+        const sourceTable =
+          partyLink.SourceTable.trim();
+
+        /*
+         * EntityReference is heterogeneous:
+         *
+         * PersonEntity        -> numeric canonical entity ID
+         * ComplainantDetails  -> values such as COMP-1
+         * Victim              -> values such as VIC-1
+         *
+         * Only PersonEntity links belong in the canonical
+         * resolved-entity collection.
+         */
+        if (sourceTable !== 'PersonEntity') {
+          return;
+        }
+
+        const entityId = toInteger(
+          partyLink.EntityReference,
+          'CasePartyEntityLink.EntityReference',
+        );
+
+        const links =
+          partyLinksByEntity.get(entityId) ?? [];
+
+        links.push(partyLink);
+
+        partyLinksByEntity.set(
+          entityId,
+          links,
+        );
+      },
+    );
+
+    const entityIds = new Set<number>([
+      ...accusedIdsByEntity.keys(),
+      ...partyLinksByEntity.keys(),
+    ]);
+
+    return [...entityIds]
+      .map((entityId) => {
+        const entityRow =
+          requireMapValue(
+            this.personEntityRows,
+            entityId,
+            `PersonEntity ${entityId}`,
+          ) as PersonEntityRow;
+
+        const resolutionLinks =
+          resolutionLinksByEntity.get(
+            entityId,
+          ) ?? [];
+
+        const strongestResolution =
+          [...resolutionLinks].sort(
+            (left, right) => {
+              const leftConfidence =
+                toConfidenceScore(
+                  left.Confidence,
+                  'AccusedEntityLink.Confidence',
+                ) ?? -1;
+
+              const rightConfidence =
+                toConfidenceScore(
+                  right.Confidence,
+                  'AccusedEntityLink.Confidence',
+                ) ?? -1;
+
+              return (
+                rightConfidence -
+                leftConfidence
+              );
+            },
+          )[0] ?? null;
+
+        const partyLinks =
+          partyLinksByEntity.get(
+            entityId,
+          ) ?? [];
+
+        const roles = new Set<string>();
+
+        if (
+          (
+            accusedIdsByEntity.get(
+              entityId,
+            ) ?? []
+          ).length > 0
+        ) {
+          roles.add('ACCUSED');
+        }
+
+        partyLinks.forEach((link) => {
+          const role = link.Role.trim();
+
+          if (role) {
+            roles.add(role);
+          }
+        });
+
+        return {
+          entityId,
+
+          canonicalName:
+            entityRow.CanonicalName.trim(),
+
+          dateOfBirth:
+            toNullableString(
+              entityRow.DateOfBirth,
+            ),
+
+          gender: this.optionalLookup(
+            this.genderLookup,
+            entityRow.GenderID,
+            'PersonEntity.GenderID',
+          ),
+
+          occupation: this.optionalLookup(
+            this.occupationLookup,
+            entityRow.OccupationID,
+            'PersonEntity.OccupationID',
+          ),
+
+          homeLocationId:
+            toNullableInteger(
+              entityRow.HomeLocationID,
+              'PersonEntity.HomeLocationID',
+            ),
+
+          dataOrigin:
+            entityRow.DataOrigin.trim(),
+
+          syntheticRepeatClass:
+            toNullableString(
+              entityRow.SyntheticRepeatClass,
+            ),
+
+          active: toRequiredBoolean(
+            entityRow.Active,
+            'PersonEntity.Active',
+          ),
+
+          resolutionStatus:
+            strongestResolution
+              ? toNullableString(
+                  strongestResolution
+                    .ResolutionStatus,
+                )
+              : null,
+
+          resolutionConfidence:
+            strongestResolution
+              ? toConfidenceScore(
+                  strongestResolution
+                    .Confidence,
+                  'AccusedEntityLink.Confidence',
+                )
+              : null,
+
+          resolutionEvidence:
+            strongestResolution
+              ? toNullableString(
+                  strongestResolution
+                    .EvidenceBasis,
+                )
+              : null,
+
+          accusedIds:
+            accusedIdsByEntity.get(
+              entityId,
+            ) ?? [],
+
+          roles: [...roles].sort(
+            (left, right) =>
+              left.localeCompare(
+                right,
+                'en-IN',
+              ),
+          ),
+
+          sourceLinks: partyLinks.map(
+            (link) =>
+              this.createEntitySourceLink(
+                link,
+              ),
+          ),
+        };
+      })
+      .sort(
+        (left, right) =>
+          left.canonicalName.localeCompare(
+            right.canonicalName,
+            'en-IN',
+          ) ||
+          left.entityId - right.entityId,
+      );
   }
 
   private createLegalSections(

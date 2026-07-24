@@ -166,6 +166,43 @@ export interface CaseEvidenceItem {
   dataOrigin: string;
 }
 
+export interface CaseEntitySourceLink {
+  role: string;
+
+  sourceTable: string;
+  sourceRecordId: number;
+
+  confidence: number | null;
+}
+
+export interface CaseResolvedEntity {
+  entityId: number;
+  canonicalName: string;
+
+  dateOfBirth: IsoDateString | null;
+
+  gender:
+    NumericLookupReference | null;
+
+  occupation:
+    NumericLookupReference | null;
+
+  homeLocationId: number | null;
+
+  dataOrigin: string;
+  syntheticRepeatClass: string | null;
+  active: boolean;
+
+  resolutionStatus: string | null;
+  resolutionConfidence: number | null;
+  resolutionEvidence: string | null;
+
+  accusedIds: number[];
+  roles: string[];
+
+  sourceLinks: CaseEntitySourceLink[];
+}
+
 export interface CaseDetail extends CaseSummary {
   registeringOfficer: NumericLookupReference;
 
@@ -174,6 +211,8 @@ export interface CaseDetail extends CaseSummary {
   complainants: CaseComplainant[];
   victims: CaseVictim[];
   accused: CaseAccused[];
+
+  resolvedEntities: CaseResolvedEntity[];
 
   legalSections: CaseLegalSection[];
   arrestEvents: CaseArrestEvent[];
