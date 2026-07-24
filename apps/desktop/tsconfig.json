@@ -1,22 +1,21 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "CommonJS",
-    "moduleResolution": "Bundler",
-
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "rootDir": ".",
     "outDir": "dist",
-
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "jsx": "react-jsx",
-
     "strict": true,
     "allowJs": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-
     "resolveJsonModule": true,
     "sourceMap": true
   },
@@ -27,5 +26,10 @@
     "forge.config.ts",
     "webpack.*.ts"
   ],
-  "exclude": ["node_modules", ".webpack", "out", "dist"]
+  "exclude": [
+    "node_modules",
+    ".webpack",
+    "out",
+    "dist"
+  ]
 }

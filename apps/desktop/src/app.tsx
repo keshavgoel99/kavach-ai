@@ -1,5 +1,6 @@
 import { ApiStatusCard } from "./components/ApiStatusCard";
 import { SystemPanel } from "./components/SystemPanel";
+import { CrimeRecordsPanel } from './components/CrimeRecordsPanel';
 import React from "react";
 import { createRoot } from "react-dom/client";
 
@@ -89,10 +90,12 @@ function App() {
 
           <StatusCard
             title="Crime dataset"
-            value="Case API ready"
-            description="10,000 synthetic FIR records are available through validated search and detail endpoints."
+            value="Records live"
+            description="The desktop is securely reading the validated 10,000-case FIR index."
           />
         </section>
+
+        <CrimeRecordsPanel />
 
         <section className="content-grid">
           <article className="panel">

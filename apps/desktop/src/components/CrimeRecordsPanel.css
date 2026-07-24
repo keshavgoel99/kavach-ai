@@ -1,0 +1,297 @@
+.crime-records {
+  margin-top: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(126, 150, 172, 0.22);
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(20, 30, 43, 0.98),
+      rgba(12, 19, 29, 0.98)
+    );
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+.crime-records__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  border-bottom:
+    1px solid rgba(126, 150, 172, 0.16);
+}
+
+.crime-records__header h2 {
+  margin: 4px 0 8px;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+}
+
+.crime-records__header p {
+  margin: 0;
+  color: rgba(222, 231, 240, 0.65);
+}
+
+.crime-records__eyebrow {
+  color: #75dfc4;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.crime-records__signal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  border:
+    1px solid rgba(117, 223, 196, 0.25);
+  border-radius: 999px;
+  color: #75dfc4;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.crime-records__signal-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow:
+    0 0 12px rgba(117, 223, 196, 0.9);
+}
+
+.crime-records__search {
+  padding: 20px 24px 10px;
+}
+
+.crime-records__search label {
+  display: block;
+  margin-bottom: 8px;
+  color: rgba(222, 231, 240, 0.72);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.crime-records__search-row {
+  display: flex;
+  gap: 10px;
+}
+
+.crime-records__search input {
+  min-width: 0;
+  flex: 1;
+  padding: 12px 14px;
+  border:
+    1px solid rgba(126, 150, 172, 0.25);
+  border-radius: 10px;
+  outline: none;
+  background: rgba(7, 12, 19, 0.7);
+  color: #f4f7fa;
+  font: inherit;
+}
+
+.crime-records__search input:focus {
+  border-color: rgba(117, 223, 196, 0.7);
+  box-shadow:
+    0 0 0 3px rgba(117, 223, 196, 0.08);
+}
+
+.crime-records button {
+  padding: 10px 15px;
+  border:
+    1px solid rgba(117, 223, 196, 0.32);
+  border-radius: 10px;
+  background: rgba(117, 223, 196, 0.12);
+  color: #a9f1df;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.crime-records button:hover:not(:disabled) {
+  background: rgba(117, 223, 196, 0.19);
+}
+
+.crime-records button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.crime-records__clear {
+  border-color:
+    rgba(222, 231, 240, 0.18) !important;
+  background:
+    rgba(222, 231, 240, 0.05) !important;
+  color:
+    rgba(222, 231, 240, 0.72) !important;
+}
+
+.crime-records__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 24px 18px;
+  color: rgba(222, 231, 240, 0.6);
+  font-size: 13px;
+}
+
+.crime-records__summary strong {
+  margin-right: 5px;
+  color: #f4f7fa;
+  font-size: 18px;
+}
+
+.crime-records__query {
+  overflow: hidden;
+  max-width: 50%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crime-records__error {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0 24px 18px;
+  padding: 13px 15px;
+  border:
+    1px solid rgba(255, 113, 113, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 88, 88, 0.08);
+  color: #ffaaaa;
+  font-size: 13px;
+}
+
+.crime-records__table-shell {
+  overflow-x: auto;
+  border-top:
+    1px solid rgba(126, 150, 172, 0.14);
+  border-bottom:
+    1px solid rgba(126, 150, 172, 0.14);
+}
+
+.crime-records table {
+  width: 100%;
+  min-width: 960px;
+  border-collapse: collapse;
+}
+
+.crime-records th,
+.crime-records td {
+  padding: 15px 18px;
+  text-align: left;
+}
+
+.crime-records th {
+  background: rgba(4, 9, 15, 0.38);
+  color: rgba(222, 231, 240, 0.5);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.crime-records tbody tr {
+  border-top:
+    1px solid rgba(126, 150, 172, 0.1);
+}
+
+.crime-records tbody tr:hover {
+  background: rgba(117, 223, 196, 0.035);
+}
+
+.records-primary {
+  color: #edf3f8;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.records-secondary {
+  margin-top: 4px;
+  color: rgba(222, 231, 240, 0.48);
+  font-size: 11px;
+}
+
+.records-badge {
+  display: inline-flex;
+  padding: 5px 8px;
+  border:
+    1px solid rgba(127, 152, 179, 0.25);
+  border-radius: 999px;
+  background: rgba(127, 152, 179, 0.08);
+  color: #b9c7d5;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.records-badge--critical {
+  border-color:
+    rgba(255, 113, 113, 0.3);
+  background: rgba(255, 88, 88, 0.09);
+  color: #ffaaaa;
+}
+
+.records-badge--warning {
+  border-color:
+    rgba(245, 191, 91, 0.3);
+  background: rgba(245, 191, 91, 0.09);
+  color: #f6cf84;
+}
+
+.records-badge--success {
+  border-color:
+    rgba(117, 223, 196, 0.3);
+  background: rgba(117, 223, 196, 0.09);
+  color: #92ead5;
+}
+
+.crime-records__message {
+  padding: 42px !important;
+  color: rgba(222, 231, 240, 0.55);
+  text-align: center !important;
+}
+
+.crime-records__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 24px;
+  color: rgba(222, 231, 240, 0.58);
+  font-size: 12px;
+}
+
+.crime-records__pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 760px) {
+  .crime-records__header,
+  .crime-records__summary,
+  .crime-records__pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .crime-records__search-row {
+    flex-wrap: wrap;
+  }
+
+  .crime-records__search input {
+    flex-basis: 100%;
+  }
+
+  .crime-records__query {
+    max-width: 100%;
+  }
+}
