@@ -1,5 +1,6 @@
 import type {
   CaseDetail,
+  CaseFilterOptions,
   CaseListFilters,
   CaseListResponse,
 } from '@kavach/shared-types';
@@ -18,4 +19,7 @@ export interface CaseBridge {
   getById(
     caseId: number,
   ): Promise<CaseDetail>;
+
+  getFilterOptions():
+    Promise<CaseFilterOptions>;
 }

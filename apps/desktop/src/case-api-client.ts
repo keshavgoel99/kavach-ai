@@ -1,6 +1,7 @@
 import type {
   ApiErrorResponse,
   CaseDetail,
+  CaseFilterOptions,
   CaseListResponse,
 } from '@kavach/shared-types';
 
@@ -187,5 +188,11 @@ export async function fetchCaseById(
 
   return requestJson<CaseDetail>(
     `/cases/${caseId}`,
+  );
+}
+
+export async function fetchCaseFilterOptions(): Promise<CaseFilterOptions> {
+  return requestJson<CaseFilterOptions>(
+    '/cases/filter-options',
   );
 }

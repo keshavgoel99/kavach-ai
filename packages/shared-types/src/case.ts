@@ -177,3 +177,28 @@ export interface CaseListResponse {
   items: CaseSummary[];
   pagination: PaginationMetadata;
 }
+
+export interface CasePoliceStationFilterOption
+  extends NumericLookupReference {
+  districtId: number;
+}
+
+export interface CaseMinorCrimeHeadFilterOption
+  extends NumericLookupReference {
+  majorCrimeHeadId: number;
+}
+
+export interface CaseFilterOptions {
+  districts: NumericLookupReference[];
+
+  policeStations:
+    CasePoliceStationFilterOption[];
+
+  gravities: NumericLookupReference[];
+  statuses: NumericLookupReference[];
+
+  majorCrimeHeads: NumericLookupReference[];
+
+  minorCrimeHeads:
+    CaseMinorCrimeHeadFilterOption[];
+}

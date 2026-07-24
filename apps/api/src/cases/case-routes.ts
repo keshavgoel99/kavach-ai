@@ -75,6 +75,26 @@ export function createCaseRouter(): Router {
   );
 
   router.get(
+    '/filter-options',
+    async (
+      _request,
+      response,
+      next,
+    ) => {
+      try {
+        const repository =
+          await getCaseRepository();
+
+        response.status(200).json(
+          repository.getFilterOptions(),
+        );
+      } catch (error: unknown) {
+        next(error);
+      }
+    },
+  );
+
+  router.get(
     '/:caseId',
     async (
       request,

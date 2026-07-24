@@ -4,6 +4,7 @@ import type {
   CaseChargesheet,
   CaseComplainant,
   CaseDetail,
+  CaseFilterOptions,
   CaseLegalSection,
   CaseListFilters,
   CaseListResponse,
@@ -235,6 +236,24 @@ function groupRowsByInteger<
   });
 
   return groups;
+}
+
+function sortFilterOptions<
+  Option extends {
+    id: number;
+    name: string;
+  },
+>(
+  options: Iterable<Option>,
+): Option[] {
+  return [...options].sort(
+    (left, right) =>
+      left.name.localeCompare(
+        right.name,
+        'en-IN',
+      ) ||
+      left.id - right.id,
+  );
 }
 
 export class CaseRepository {
@@ -475,6 +494,112 @@ export class CaseRepository {
 
       return right.caseId - left.caseId;
     });
+  }
+
+  public getFilterOptions(): CaseFilterOptions {
+    const districts =
+      new Map<
+        number,
+        CaseFilterOptions['districts'][number]
+      >();
+
+    const policeStations =
+      new Map<
+        number,
+        CaseFilterOptions['policeStations'][number]
+      >();
+
+    const gravities =
+      new Map<
+        number,
+        CaseFilterOptions['gravities'][number]
+      >();
+
+    const statuses =
+      new Map<
+        number,
+        CaseFilterOptions['statuses'][number]
+      >();
+
+    const majorCrimeHeads =
+      new Map<
+        number,
+        CaseFilterOptions['majorCrimeHeads'][number]
+      >();
+
+    const minorCrimeHeads =
+      new Map<
+        number,
+        CaseFilterOptions['minorCrimeHeads'][number]
+      >();
+
+    this.sortedSummaries.forEach(
+      (caseSummary) => {
+        districts.set(
+          caseSummary.district.id,
+          caseSummary.district,
+        );
+
+        policeStations.set(
+          caseSummary.policeStation.id,
+          {
+            ...caseSummary.policeStation,
+            districtId:
+              caseSummary.district.id,
+          },
+        );
+
+        gravities.set(
+          caseSummary.gravity.id,
+          caseSummary.gravity,
+        );
+
+        statuses.set(
+          caseSummary.status.id,
+          caseSummary.status,
+        );
+
+        majorCrimeHeads.set(
+          caseSummary.majorCrimeHead.id,
+          caseSummary.majorCrimeHead,
+        );
+
+        minorCrimeHeads.set(
+          caseSummary.minorCrimeHead.id,
+          {
+            ...caseSummary.minorCrimeHead,
+            majorCrimeHeadId:
+              caseSummary.majorCrimeHead.id,
+          },
+        );
+      },
+    );
+
+    return {
+      districts: sortFilterOptions(
+        districts.values(),
+      ),
+
+      policeStations: sortFilterOptions(
+        policeStations.values(),
+      ),
+
+      gravities: sortFilterOptions(
+        gravities.values(),
+      ),
+
+      statuses: sortFilterOptions(
+        statuses.values(),
+      ),
+
+      majorCrimeHeads: sortFilterOptions(
+        majorCrimeHeads.values(),
+      ),
+
+      minorCrimeHeads: sortFilterOptions(
+        minorCrimeHeads.values(),
+      ),
+    };
   }
 
   public findCases(

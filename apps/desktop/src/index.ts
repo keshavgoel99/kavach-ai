@@ -3,6 +3,7 @@ import type { ApiHealth } from '@kavach/shared-types';
 
 import {
   fetchCaseById,
+  fetchCaseFilterOptions,
   fetchCaseList,
 } from './case-api-client';
 
@@ -82,6 +83,11 @@ function registerIpcHandlers(): void {
       _event,
       caseId: number,
     ) => fetchCaseById(caseId),
+  );
+
+  ipcMain.handle(
+    'kavach:cases:get-filter-options',
+    () => fetchCaseFilterOptions(),
   );
 
   ipcMain.handle(

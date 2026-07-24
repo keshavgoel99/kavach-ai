@@ -27,6 +27,11 @@ const kavachDesktopApi: KavachDesktopApi = {
         'kavach:cases:get-by-id',
         caseId,
       ),
+
+    getFilterOptions: () =>
+      ipcRenderer.invoke(
+        'kavach:cases:get-filter-options',
+      ),
   },
 
   system: {
