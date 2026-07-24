@@ -9,6 +9,10 @@ import {
   createCaseRouter,
 } from './cases/case-routes';
 
+import {
+  createEntityRouter,
+} from './entities/entity-routes';
+
 export function createApp() {
   const app = express();
 
@@ -40,6 +44,11 @@ export function createApp() {
   app.use(
     '/api/v1/cases',
     createCaseRouter(),
+  );
+
+  app.use(
+    '/api/v1/entities',
+    createEntityRouter(),
   );
 
   app.use((request, response) => {

@@ -29,6 +29,8 @@ import type {
   LegalReference,
   NumericLookupReference,
   PaginationInput,
+  EntityCaseConnection,
+  EntityProfileDetail,
 } from '@kavach/shared-types';
 
 import type {
@@ -502,6 +504,17 @@ function createBreakdown(
   }));
 }
 
+interface EntityCaseAccumulator {
+  roles: Set<string>;
+  accusedIds: Set<number>;
+
+  resolutionConfidence:
+    number | null;
+
+  sourceLinks:
+    CaseEntitySourceLink[];
+}
+
 export class CaseRepository {
   private readonly caseRecordsById =
     new Map<number, CaseMasterRecord>();
@@ -531,6 +544,7 @@ export class CaseRepository {
   private readonly unitRows;
   private readonly locationRows;
   private readonly personEntityRows;
+  private readonly accusedRows;
   private readonly digitalIdentifierRows;
   private readonly vehicleRows;
   private readonly financialAccountRows;
@@ -548,7 +562,9 @@ export class CaseRepository {
   private readonly complainantsByCase;
 
   private readonly accusedEntityLinksByAccused;
+  private readonly accusedEntityLinksByEntity;
   private readonly casePartyEntityLinksByCase;
+  private readonly casePartyEntityLinksByEntity;
   private readonly legalSectionsByCase;
   private readonly arrestsByCase;
   private readonly chargesheetsByCase;
@@ -679,6 +695,13 @@ export class CaseRepository {
         'PersonEntity',
       );
 
+    this.accusedRows =
+      buildNumericRowMap(
+        tables.Accused,
+        'AccusedMasterID',
+        'Accused',
+      );
+
     this.digitalIdentifierRows =
       buildNumericRowMap(
         tables.DigitalIdentifier,
@@ -760,12 +783,69 @@ export class CaseRepository {
         'AccusedEntityLink',
       );
 
+    this.accusedEntityLinksByEntity =
+      groupRowsByInteger(
+        tables.AccusedEntityLink,
+        'EntityID',
+        'AccusedEntityLink',
+      );
+
     this.casePartyEntityLinksByCase =
       groupRowsByInteger(
         tables.CasePartyEntityLink,
         'CaseMasterID',
         'CasePartyEntityLink',
       );
+
+    this.casePartyEntityLinksByEntity =
+      new Map<
+        number,
+        CasePartyEntityLinkRow[]
+      >();
+
+    tables.CasePartyEntityLink.forEach(
+      (row: CasePartyEntityLinkRow) => {
+        const sourceTable =
+          row.SourceTable
+            .trim()
+            .toLowerCase();
+
+        /*
+         * EntityReference can also contain values
+         * such as COMP-1 and VIC-1.
+         *
+         * Only PersonEntity references belong in
+         * the canonical entity index.
+         */
+        if (sourceTable !== 'personentity') {
+          return;
+        }
+
+        const rawEntityId =
+          row.EntityReference.trim();
+
+        if (!/^\d+$/.test(rawEntityId)) {
+          return;
+        }
+
+        const entityId = toInteger(
+          rawEntityId,
+          'CasePartyEntityLink.EntityReference',
+        );
+
+        const existing =
+          this.casePartyEntityLinksByEntity.get(
+            entityId,
+          ) ?? [];
+
+        existing.push(row);
+
+        this.casePartyEntityLinksByEntity.set(
+          entityId,
+          existing,
+        );
+      },
+    );
 
     this.legalSectionsByCase =
       groupRowsByInteger(
@@ -1285,6 +1365,260 @@ export class CaseRepository {
         totalItems,
         totalPages,
       },
+    };
+  }
+
+  public findEntityById(
+    entityId: number,
+  ): EntityProfileDetail | null {
+    const entityRow =
+      this.personEntityRows.get(entityId);
+
+    if (!entityRow) {
+      return null;
+    }
+
+    const connections =
+      new Map<
+        number,
+        EntityCaseAccumulator
+      >();
+
+    const getConnection = (
+      caseId: number,
+    ): EntityCaseAccumulator => {
+      const existing =
+        connections.get(caseId);
+
+      if (existing) {
+        return existing;
+      }
+
+      const created:
+        EntityCaseAccumulator = {
+          roles: new Set<string>(),
+          accusedIds: new Set<number>(),
+
+          resolutionConfidence: null,
+
+          sourceLinks: [],
+        };
+
+      connections.set(caseId, created);
+
+      return created;
+    };
+
+    const accusedLinks =
+      this.accusedEntityLinksByEntity.get(
+        entityId,
+      ) ?? [];
+
+    accusedLinks.forEach(
+      (link: AccusedEntityLinkRow) => {
+        const accusedId = toInteger(
+          link.AccusedMasterID,
+          'AccusedEntityLink.AccusedMasterID',
+        );
+
+        const accusedRow =
+          requireMapValue(
+            this.accusedRows,
+            accusedId,
+            `Accused ${accusedId}`,
+          ) as AccusedRow;
+
+        const caseId = toInteger(
+          accusedRow.CaseMasterID,
+          'Accused.CaseMasterID',
+        );
+
+        const connection =
+          getConnection(caseId);
+
+        connection.roles.add('ACCUSED');
+        connection.accusedIds.add(
+          accusedId,
+        );
+
+        const confidence =
+          toConfidenceScore(
+            link.Confidence,
+            'AccusedEntityLink.Confidence',
+          );
+
+        if (
+          confidence !== null &&
+          (
+            connection
+              .resolutionConfidence ===
+              null ||
+            confidence >
+              connection
+                .resolutionConfidence
+          )
+        ) {
+          connection.resolutionConfidence =
+            confidence;
+        }
+      },
+    );
+
+    const partyLinks =
+      this.casePartyEntityLinksByEntity.get(
+        entityId,
+      ) ?? [];
+
+    partyLinks.forEach(
+      (link: CasePartyEntityLinkRow) => {
+        const caseId = toInteger(
+          link.CaseMasterID,
+          'CasePartyEntityLink.CaseMasterID',
+        );
+
+        const connection =
+          getConnection(caseId);
+
+        const role = link.Role.trim();
+
+        if (role) {
+          connection.roles.add(role);
+        }
+
+        connection.sourceLinks.push(
+          this.createEntitySourceLink(link),
+        );
+      },
+    );
+
+    const linkedCases:
+      EntityCaseConnection[] =
+      [...connections.entries()]
+        .map(
+          ([caseId, connection]) => {
+            const caseSummary =
+              requireMapValue(
+                this.summariesById,
+                caseId,
+                `CaseSummary ${caseId}`,
+              );
+
+            return {
+              case: caseSummary,
+
+              roles: [
+                ...connection.roles,
+              ].sort(
+                (left, right) =>
+                  left.localeCompare(
+                    right,
+                    'en-IN',
+                  ),
+              ),
+
+              accusedIds: [
+                ...connection.accusedIds,
+              ].sort(
+                (left, right) =>
+                  left - right,
+              ),
+
+              resolutionConfidence:
+                connection
+                  .resolutionConfidence,
+
+              sourceLinks:
+                connection.sourceLinks,
+            };
+          },
+        )
+        .sort((left, right) => {
+          const dateComparison =
+            right.case.registeredDate
+              .localeCompare(
+                left.case.registeredDate,
+              );
+
+          if (dateComparison !== 0) {
+            return dateComparison;
+          }
+
+          return (
+            right.case.caseId -
+            left.case.caseId
+          );
+        });
+
+    return {
+      entityId,
+
+      canonicalName:
+        entityRow.CanonicalName.trim(),
+
+      dateOfBirth:
+        toNullableString(
+          entityRow.DateOfBirth,
+        ),
+
+      gender: this.optionalLookup(
+        this.genderLookup,
+        entityRow.GenderID,
+        'PersonEntity.GenderID',
+      ),
+
+      occupation: this.optionalLookup(
+        this.occupationLookup,
+        entityRow.OccupationID,
+        'PersonEntity.OccupationID',
+      ),
+
+      homeLocationId:
+        toNullableInteger(
+          entityRow.HomeLocationID,
+          'PersonEntity.HomeLocationID',
+        ),
+
+      dataOrigin:
+        entityRow.DataOrigin.trim(),
+
+      syntheticRepeatClass:
+        toNullableString(
+          entityRow.SyntheticRepeatClass,
+        ),
+
+      active: toRequiredBoolean(
+        entityRow.Active,
+        'PersonEntity.Active',
+      ),
+
+      identifiers:
+        this.createEntityIdentifiers(
+          entityId,
+          new Set<number>(),
+        ),
+
+      vehicles:
+        this.createEntityVehicles(
+          entityId,
+          new Set<number>(),
+        ),
+
+      financialAccounts:
+        this.createEntityAccounts(
+          entityId,
+        ),
+
+      knownAssociates:
+        this.createKnownAssociates(
+          entityId,
+        ),
+
+      gangMemberships:
+        this.createGangMemberships(
+          entityId,
+        ),
+
+      linkedCases,
     };
   }
 

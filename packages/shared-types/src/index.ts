@@ -36,6 +36,8 @@ export type {
   CaseSummary,
   CaseTimelineEvent,
   CaseVictim,
+  EntityCaseConnection,
+  EntityProfileDetail,
   ChargesheetReportCode,
   IsoDateString,
   IsoDateTimeString,

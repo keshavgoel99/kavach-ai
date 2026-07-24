@@ -330,6 +330,49 @@ export interface CaseResolvedEntity {
     CaseGangMembership[];
 }
 
+export interface EntityCaseConnection {
+  case: CaseSummary;
+
+  roles: string[];
+  accusedIds: number[];
+
+  resolutionConfidence: number | null;
+
+  sourceLinks: CaseEntitySourceLink[];
+}
+
+export interface EntityProfileDetail {
+  entityId: number;
+  canonicalName: string;
+
+  dateOfBirth: IsoDateString | null;
+
+  gender:
+    NumericLookupReference | null;
+
+  occupation:
+    NumericLookupReference | null;
+
+  homeLocationId: number | null;
+
+  dataOrigin: string;
+  syntheticRepeatClass: string | null;
+  active: boolean;
+
+  identifiers: CaseEntityIdentifier[];
+  vehicles: CaseEntityVehicle[];
+
+  financialAccounts:
+    CaseEntityFinancialAccount[];
+
+  knownAssociates: CaseKnownAssociate[];
+
+  gangMemberships:
+    CaseGangMembership[];
+
+  linkedCases: EntityCaseConnection[];
+}
+
 export interface CaseDetail extends CaseSummary {
   registeringOfficer: NumericLookupReference;
 
