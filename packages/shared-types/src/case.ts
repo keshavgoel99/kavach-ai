@@ -179,9 +179,9 @@ export interface CaseDetail extends CaseSummary {
   arrestEvents: CaseArrestEvent[];
   chargesheets: CaseChargesheet[];
 
-  timeline?: CaseTimelineEvent[];
-  narratives?: CaseNarrative[];
-  evidenceItems?: CaseEvidenceItem[];
+  timeline: CaseTimelineEvent[];
+  narratives: CaseNarrative[];
+  evidenceItems: CaseEvidenceItem[];
 }
 
 export interface CaseListFilters {

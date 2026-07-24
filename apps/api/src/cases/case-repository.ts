@@ -6,12 +6,15 @@ import type {
   CaseDashboardBreakdownItem,
   CaseDashboardSummary,
   CaseDetail,
+  CaseEvidenceItem,
   CaseFilterOptions,
   CaseLegalSection,
   CaseListFilters,
   CaseListResponse,
   CaseLocation,
+  CaseNarrative,
   CaseSummary,
+  CaseTimelineEvent,
   CaseVictim,
   LegalReference,
   NumericLookupReference,
@@ -54,6 +57,15 @@ type ArrestAccusedRow =
 type ChargesheetRow =
   RawTables['ChargesheetDetails'][number];
 
+type TimelineRow =
+  RawTables['CaseTimeline'][number];
+
+type NarrativeRow =
+  RawTables['CaseNarrative'][number];
+
+type EvidenceRow =
+  RawTables['EvidenceItem'][number];
+
 function toInteger(
   value: string,
   label: string,
@@ -86,6 +98,49 @@ function toNullableInteger(
   }
 
   return toInteger(value, label);
+}
+
+function toNullableDecimal(
+  value: string,
+  label: string,
+): number | null {
+  const cleaned = value.trim();
+
+  if (!cleaned) {
+    return null;
+  }
+
+  const parsed = Number(cleaned);
+
+  if (!Number.isFinite(parsed)) {
+    throw new Error(
+      `${label} must contain a finite decimal value.`,
+    );
+  }
+
+  return parsed;
+}
+
+function toReliabilityScore(
+  value: string,
+  label: string,
+): number | null {
+  const score = toNullableDecimal(
+    value,
+    label,
+  );
+
+  if (score === null) {
+    return null;
+  }
+
+  if (score < 0 || score > 1) {
+    throw new Error(
+      `${label} must be between 0 and 1.`,
+    );
+  }
+
+  return score;
 }
 
 function toNullableBoolean(
@@ -362,6 +417,10 @@ export class CaseRepository {
   private readonly chargesheetsByCase;
   private readonly accusedByArrest;
 
+  private readonly timelineByCase;
+  private readonly narrativesByCase;
+  private readonly evidenceByCase;
+
   constructor(
     private readonly dataset: LoadedCoreDataset,
   ) {
@@ -522,6 +581,27 @@ export class CaseRepository {
         tables.ChargesheetDetails,
         'CaseMasterID',
         'ChargesheetDetails',
+      );
+
+    this.timelineByCase =
+      groupRowsByInteger(
+        tables.CaseTimeline,
+        'CaseMasterID',
+        'CaseTimeline',
+      );
+
+    this.narrativesByCase =
+      groupRowsByInteger(
+        tables.CaseNarrative,
+        'CaseMasterID',
+        'CaseNarrative',
+      );
+
+    this.evidenceByCase =
+      groupRowsByInteger(
+        tables.EvidenceItem,
+        'CaseMasterID',
+        'EvidenceItem',
       );
 
     this.accusedByArrest =
@@ -955,6 +1035,15 @@ export class CaseRepository {
 
       chargesheets:
         this.createChargesheets(caseId),
+
+      timeline:
+        this.createTimeline(caseId),
+
+      narratives:
+        this.createNarratives(caseId),
+
+      evidenceItems:
+        this.createEvidenceItems(caseId),
     };
   }
 
@@ -1343,6 +1432,153 @@ export class CaseRepository {
         'ChargesheetDetails.PolicePersonID',
       ),
     }));
+  }
+
+  private createTimeline(
+    caseId: number,
+  ): CaseTimelineEvent[] {
+    const rows =
+      this.timelineByCase.get(caseId) ?? [];
+
+    return rows
+      .map((row: TimelineRow) => ({
+        timelineEventId: toInteger(
+          row.TimelineEventID,
+          'CaseTimeline.TimelineEventID',
+        ),
+
+        eventDateTime:
+          normalizeDateTime(
+            row.EventDateTime,
+          ),
+
+        eventType:
+          row.EventType.trim(),
+
+        description:
+          row.EventDescription.trim(),
+
+        actor: this.optionalLookup(
+          this.employeeLookup,
+          row.ActorEmployeeID,
+          'CaseTimeline.ActorEmployeeID',
+        ),
+
+        sourceType:
+          row.SourceType.trim(),
+      }))
+      .sort(
+        (left, right) =>
+          left.eventDateTime.localeCompare(
+            right.eventDateTime,
+          ) ||
+          left.timelineEventId -
+            right.timelineEventId,
+      );
+  }
+
+  private createNarratives(
+    caseId: number,
+  ): CaseNarrative[] {
+    const rows =
+      this.narrativesByCase.get(caseId) ?? [];
+
+    return rows
+      .map((row: NarrativeRow) => ({
+        languageCode:
+          row.LanguageCode.trim(),
+
+        narrativeText:
+          row.NarrativeText.trim(),
+
+        sourceType:
+          row.SourceType.trim(),
+
+        dataOrigin:
+          row.DataOrigin.trim(),
+      }))
+      .sort(
+        (left, right) =>
+          left.languageCode.localeCompare(
+            right.languageCode,
+            'en-IN',
+          ) ||
+          left.sourceType.localeCompare(
+            right.sourceType,
+            'en-IN',
+          ),
+      );
+  }
+
+  private createEvidenceItems(
+    caseId: number,
+  ): CaseEvidenceItem[] {
+    const rows =
+      this.evidenceByCase.get(caseId) ?? [];
+
+    return rows
+      .map((row: EvidenceRow) => {
+        const collectedDateTime =
+          toNullableString(
+            row.CollectedDateTime,
+          );
+
+        return {
+          evidenceId: toInteger(
+            row.EvidenceID,
+            'EvidenceItem.EvidenceID',
+          ),
+
+          evidenceType:
+            row.EvidenceType.trim(),
+
+          description:
+            row.Description.trim(),
+
+          collectedDateTime:
+            collectedDateTime === null
+              ? null
+              : normalizeDateTime(
+                  collectedDateTime,
+                ),
+
+          reliabilityScore:
+            toReliabilityScore(
+              row.ReliabilityScore,
+              'EvidenceItem.ReliabilityScore',
+            ),
+
+          dataOrigin:
+            row.DataOrigin.trim(),
+        };
+      })
+      .sort((left, right) => {
+        if (
+          left.collectedDateTime === null &&
+          right.collectedDateTime === null
+        ) {
+          return (
+            left.evidenceId -
+            right.evidenceId
+          );
+        }
+
+        if (left.collectedDateTime === null) {
+          return 1;
+        }
+
+        if (right.collectedDateTime === null) {
+          return -1;
+        }
+
+        return (
+          left.collectedDateTime.localeCompare(
+            right.collectedDateTime,
+          ) ||
+          left.evidenceId -
+            right.evidenceId
+        );
+      });
   }
 
   private optionalLookup(
