@@ -244,6 +244,142 @@ export const CORE_TABLE_COLUMNS = {
     'ReliabilityScore',
     'DataOrigin',
   ],
+
+  PersonEntity: [
+    'EntityID',
+    'CanonicalName',
+    'DateOfBirth',
+    'GenderID',
+    'OccupationID',
+    'HomeLocationID',
+    'DataOrigin',
+    'SyntheticRepeatClass',
+    'Active',
+  ],
+
+  AccusedEntityLink: [
+    'AccusedMasterID',
+    'EntityID',
+    'ResolutionStatus',
+    'Confidence',
+    'EvidenceBasis',
+  ],
+
+  DigitalIdentifier: [
+    'IdentifierID',
+    'IdentifierType',
+    'IdentifierValue',
+    'FirstObservedDate',
+    'Source',
+  ],
+
+  PersonIdentifierLink: [
+    'EntityID',
+    'IdentifierID',
+    'RelationshipType',
+    'Confidence',
+  ],
+
+  Vehicle: [
+    'VehicleID',
+    'RegistrationNo',
+    'VehicleType',
+    'ModelYear',
+    'Source',
+  ],
+
+  PersonVehicleLink: [
+    'EntityID',
+    'VehicleID',
+    'RelationshipType',
+    'Confidence',
+  ],
+
+  FinancialAccount: [
+    'AccountID',
+    'AccountType',
+    'MaskedAccountNo',
+    'InstitutionName',
+    'OpenDate',
+    'Status',
+    'Source',
+  ],
+
+  PersonAccountLink: [
+    'EntityID',
+    'AccountID',
+    'RelationshipType',
+    'Confidence',
+  ],
+
+  FinancialTransaction: [
+    'TransactionID',
+    'FromAccountID',
+    'ToAccountID',
+    'TransactionDateTime',
+    'Amount',
+    'Currency',
+    'Channel',
+    'SuspiciousFlag',
+    'RiskScore',
+    'Narrative',
+  ],
+
+  CasePartyEntityLink: [
+    'CaseMasterID',
+    'EntityReference',
+    'Role',
+    'SourceTable',
+    'SourceRecordID',
+    'Confidence',
+  ],
+
+  CaseVehicleLink: [
+    'CaseMasterID',
+    'VehicleID',
+    'RelationshipType',
+    'Confidence',
+  ],
+
+  CaseIdentifierLink: [
+    'CaseMasterID',
+    'IdentifierID',
+    'RelationshipType',
+    'Confidence',
+  ],
+
+  CaseFinancialLink: [
+    'CaseMasterID',
+    'TransactionID',
+    'RelationshipType',
+    'Confidence',
+  ],
+
+  KnownAssociation: [
+    'AssociationID',
+    'EntityID1',
+    'EntityID2',
+    'RelationshipType',
+    'ObservedCount',
+    'Confidence',
+    'EvidenceBasis',
+  ],
+
+  Gang: [
+    'GangID',
+    'GangName',
+    'PrimaryCrimeType',
+    'PrimaryLocationID',
+    'Status',
+  ],
+
+  GangMembership: [
+    'GangID',
+    'EntityID',
+    'FromDate',
+    'Role',
+    'Confidence',
+  ],
 } as const;
 
 export type CoreTableName =
@@ -351,6 +487,54 @@ export type CaseNarrativeRow =
 export type EvidenceItemRow =
   CoreTableRowMap['EvidenceItem'];
 
+export type PersonEntityRow =
+  CoreTableRowMap['PersonEntity'];
+
+export type AccusedEntityLinkRow =
+  CoreTableRowMap['AccusedEntityLink'];
+
+export type DigitalIdentifierRow =
+  CoreTableRowMap['DigitalIdentifier'];
+
+export type PersonIdentifierLinkRow =
+  CoreTableRowMap['PersonIdentifierLink'];
+
+export type VehicleRow =
+  CoreTableRowMap['Vehicle'];
+
+export type PersonVehicleLinkRow =
+  CoreTableRowMap['PersonVehicleLink'];
+
+export type FinancialAccountRow =
+  CoreTableRowMap['FinancialAccount'];
+
+export type PersonAccountLinkRow =
+  CoreTableRowMap['PersonAccountLink'];
+
+export type FinancialTransactionRow =
+  CoreTableRowMap['FinancialTransaction'];
+
+export type CasePartyEntityLinkRow =
+  CoreTableRowMap['CasePartyEntityLink'];
+
+export type CaseVehicleLinkRow =
+  CoreTableRowMap['CaseVehicleLink'];
+
+export type CaseIdentifierLinkRow =
+  CoreTableRowMap['CaseIdentifierLink'];
+
+export type CaseFinancialLinkRow =
+  CoreTableRowMap['CaseFinancialLink'];
+
+export type KnownAssociationRow =
+  CoreTableRowMap['KnownAssociation'];
+
+export type GangRow =
+  CoreTableRowMap['Gang'];
+
+export type GangMembershipRow =
+  CoreTableRowMap['GangMembership'];
+
 /**
  * Database or logical keys used for duplicate detection.
  *
@@ -413,5 +597,80 @@ export const CORE_TABLE_PRIMARY_KEYS = {
 
   EvidenceItem: [
     'EvidenceID',
+  ],
+
+  PersonEntity: [
+    'EntityID',
+  ],
+
+  AccusedEntityLink: [
+    'AccusedMasterID',
+    'EntityID',
+  ],
+
+  DigitalIdentifier: [
+    'IdentifierID',
+  ],
+
+  PersonIdentifierLink: [
+    'EntityID',
+    'IdentifierID',
+  ],
+
+  Vehicle: [
+    'VehicleID',
+  ],
+
+  PersonVehicleLink: [
+    'EntityID',
+    'VehicleID',
+  ],
+
+  FinancialAccount: [
+    'AccountID',
+  ],
+
+  PersonAccountLink: [
+    'EntityID',
+    'AccountID',
+  ],
+
+  FinancialTransaction: [
+    'TransactionID',
+  ],
+
+  CasePartyEntityLink: [
+    'CaseMasterID',
+    'SourceTable',
+    'SourceRecordID',
+    'Role',
+  ],
+
+  CaseVehicleLink: [
+    'CaseMasterID',
+    'VehicleID',
+  ],
+
+  CaseIdentifierLink: [
+    'CaseMasterID',
+    'IdentifierID',
+  ],
+
+  CaseFinancialLink: [
+    'CaseMasterID',
+    'TransactionID',
+  ],
+
+  KnownAssociation: [
+    'AssociationID',
+  ],
+
+  Gang: [
+    'GangID',
+  ],
+
+  GangMembership: [
+    'GangID',
+    'EntityID',
   ],
 } as const;
