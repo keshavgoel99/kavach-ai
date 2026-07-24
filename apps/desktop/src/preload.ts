@@ -8,6 +8,8 @@ const IPC_CHANNELS = {
 
   listCases: 'kavach:cases:list',
   getCaseById: 'kavach:cases:get-by-id',
+
+  getEntityById: 'kavach:entities:get-by-id',
 } as const;
 
 const kavachDesktopApi: KavachDesktopApi = {
@@ -47,6 +49,16 @@ const kavachDesktopApi: KavachDesktopApi = {
   api: {
     getHealth: () =>
       ipcRenderer.invoke(IPC_CHANNELS.getApiHealth),
+  },
+
+  entities: {
+    getById: (
+      entityId: number,
+    ) =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS.getEntityById,
+        entityId,
+      ),
   },
 };
 

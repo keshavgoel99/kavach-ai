@@ -6,6 +6,7 @@ import {
   fetchCaseDashboardSummary,
   fetchCaseFilterOptions,
   fetchCaseList,
+  fetchEntityById,
 } from './case-api-client';
 
 import type {
@@ -84,6 +85,14 @@ function registerIpcHandlers(): void {
       _event,
       caseId: number,
     ) => fetchCaseById(caseId),
+  );
+
+  ipcMain.handle(
+    'kavach:entities:get-by-id',
+    (
+      _event,
+      entityId: number,
+    ) => fetchEntityById(entityId),
   );
 
   ipcMain.handle(

@@ -4,6 +4,7 @@ import type {
   CaseDetail,
   CaseFilterOptions,
   CaseListResponse,
+  EntityProfileDetail,
 } from '@kavach/shared-types';
 
 import type {
@@ -189,6 +190,23 @@ export async function fetchCaseById(
 
   return requestJson<CaseDetail>(
     `/cases/${caseId}`,
+  );
+}
+
+export async function fetchEntityById(
+  entityId: number,
+): Promise<EntityProfileDetail> {
+  if (
+    !Number.isSafeInteger(entityId) ||
+    entityId < 1
+  ) {
+    throw new Error(
+      'entityId must be a positive integer.',
+    );
+  }
+
+  return requestJson<EntityProfileDetail>(
+    `/entities/${entityId}`,
   );
 }
 

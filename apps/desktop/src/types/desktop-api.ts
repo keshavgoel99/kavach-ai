@@ -1,6 +1,9 @@
 import type {
   CaseBridge,
 } from './case-bridge';
+import type {
+  EntityDesktopApi,
+} from './entity-bridge';
 import type { ApiHealth } from '@kavach/shared-types';
 
 export interface RuntimeInfo {
@@ -22,4 +25,6 @@ export interface KavachDesktopApi {
   api: {
     getHealth: () => Promise<ApiHealth>;
   };
+
+  entities: EntityDesktopApi;
 }
