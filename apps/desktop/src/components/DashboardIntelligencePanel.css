@@ -1,0 +1,325 @@
+.dashboard-intelligence {
+  margin-top: 24px;
+  overflow: hidden;
+  border:
+    1px solid rgba(126, 150, 172, 0.2);
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(20, 30, 43, 0.98),
+      rgba(10, 16, 25, 0.98)
+    );
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.22);
+}
+
+.dashboard-intelligence__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  border-bottom:
+    1px solid rgba(126, 150, 172, 0.15);
+}
+
+.dashboard-intelligence__header h2 {
+  margin: 5px 0 8px;
+  color: #f4f7fa;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+}
+
+.dashboard-intelligence__header p {
+  margin: 0;
+  color: rgba(222, 231, 240, 0.62);
+  font-size: 13px;
+}
+
+.dashboard-intelligence__eyebrow {
+  color: #75dfc4;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.17em;
+}
+
+.dashboard-intelligence__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border:
+    1px solid rgba(117, 223, 196, 0.26);
+  border-radius: 999px;
+  background:
+    rgba(117, 223, 196, 0.06);
+  color: #92ead5;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.dashboard-intelligence__status span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow:
+    0 0 12px rgba(117, 223, 196, 0.85);
+}
+
+.dashboard-intelligence__state {
+  min-height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  padding: 40px;
+  color: rgba(222, 231, 240, 0.58);
+  text-align: center;
+}
+
+.dashboard-intelligence__state strong {
+  color: #edf3f8;
+}
+
+.dashboard-intelligence__state--error {
+  color: #ffaaaa;
+}
+
+.dashboard-intelligence__state button {
+  margin-top: 8px;
+  padding: 9px 14px;
+  border:
+    1px solid rgba(255, 113, 113, 0.34);
+  border-radius: 8px;
+  background: rgba(255, 88, 88, 0.07);
+  color: #ffaaaa;
+  font: inherit;
+  cursor: pointer;
+}
+
+.dashboard-intelligence__loader {
+  width: 30px;
+  height: 30px;
+  border:
+    2px solid rgba(117, 223, 196, 0.15);
+  border-top-color: #75dfc4;
+  border-radius: 50%;
+  animation:
+    dashboard-intelligence-spin
+    700ms linear infinite;
+}
+
+@keyframes dashboard-intelligence-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.dashboard-intelligence__content {
+  padding: 24px;
+}
+
+.dashboard-intelligence__metrics {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-intelligence__metric {
+  position: relative;
+  overflow: hidden;
+  min-height: 130px;
+  padding: 17px;
+  border:
+    1px solid rgba(126, 150, 172, 0.15);
+  border-radius: 13px;
+  background: rgba(6, 11, 18, 0.52);
+}
+
+.dashboard-intelligence__metric::after {
+  position: absolute;
+  right: -25px;
+  bottom: -34px;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background:
+    rgba(126, 150, 172, 0.05);
+  content: '';
+}
+
+.dashboard-intelligence__metric--success {
+  border-color:
+    rgba(117, 223, 196, 0.2);
+}
+
+.dashboard-intelligence__metric--warning {
+  border-color:
+    rgba(245, 191, 91, 0.2);
+}
+
+.dashboard-intelligence__metric > span {
+  display: block;
+  color: rgba(222, 231, 240, 0.48);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.dashboard-intelligence__metric strong {
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin-top: 13px;
+  color: #f4f7fa;
+  font-size: 23px;
+  line-height: 1.2;
+}
+
+.dashboard-intelligence__metric p {
+  position: relative;
+  z-index: 1;
+  margin: 11px 0 0;
+  color: rgba(222, 231, 240, 0.5);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.dashboard-intelligence__grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.dashboard-breakdown {
+  padding: 17px;
+  border:
+    1px solid rgba(126, 150, 172, 0.15);
+  border-radius: 13px;
+  background: rgba(6, 11, 18, 0.46);
+}
+
+.dashboard-breakdown header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 16px;
+}
+
+.dashboard-breakdown header span {
+  color: #75dfc4;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.dashboard-breakdown header h3 {
+  margin: 4px 0 0;
+  color: #edf3f8;
+  font-size: 15px;
+}
+
+.dashboard-breakdown header small {
+  color: rgba(222, 231, 240, 0.38);
+  font-size: 10px;
+}
+
+.dashboard-breakdown__list {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.dashboard-breakdown__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 7px;
+}
+
+.dashboard-breakdown__row strong {
+  overflow: hidden;
+  color: rgba(237, 243, 248, 0.78);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-breakdown__row > div {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.dashboard-breakdown__row span {
+  color: #edf3f8;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.dashboard-breakdown__row small {
+  color: rgba(222, 231, 240, 0.42);
+  font-size: 9px;
+}
+
+.dashboard-breakdown__track {
+  overflow: hidden;
+  height: 5px;
+  border-radius: 999px;
+  background:
+    rgba(126, 150, 172, 0.1);
+}
+
+.dashboard-breakdown__fill {
+  height: 100%;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(117, 223, 196, 0.48),
+      rgba(117, 223, 196, 0.92)
+    );
+  box-shadow:
+    0 0 9px rgba(117, 223, 196, 0.28);
+}
+
+.dashboard-breakdown__empty {
+  padding: 24px;
+  border:
+    1px dashed rgba(126, 150, 172, 0.18);
+  border-radius: 9px;
+  color: rgba(222, 231, 240, 0.42);
+  font-size: 11px;
+  text-align: center;
+}
+
+@media (max-width: 1120px) {
+  .dashboard-intelligence__metrics {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-intelligence__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboard-intelligence__metrics,
+  .dashboard-intelligence__grid {
+    grid-template-columns: 1fr;
+  }
+}
