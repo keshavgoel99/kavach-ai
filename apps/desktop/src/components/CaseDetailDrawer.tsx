@@ -10,6 +10,9 @@ import type {
 
 import './CaseDetailDrawer.css';
 import { CaseEntityIntelligence } from './CaseEntityIntelligence';
+import {
+  EntityProfileWorkspace,
+} from './EntityProfileWorkspace';
 
 interface CaseDetailDrawerProps {
   caseId: number | null;
@@ -186,11 +189,17 @@ export function CaseDetailDrawer({
   const [error, setError] =
     useState<string | null>(null);
 
+  const [
+    selectedEntityId,
+    setSelectedEntityId,
+  ] = useState<number | null>(null);
+
   useEffect(() => {
     if (caseId === null) {
       setDetail(null);
       setError(null);
       setLoading(false);
+      setSelectedEntityId(null);
       return undefined;
     }
 
@@ -199,6 +208,7 @@ export function CaseDetailDrawer({
     setDetail(null);
     setError(null);
     setLoading(true);
+    setSelectedEntityId(null);
 
     async function loadDetail(): Promise<void> {
       try {
@@ -1078,10 +1088,22 @@ export function CaseDetailDrawer({
 
             <CaseEntityIntelligence
               detail={detail}
+              onOpenEntity={
+                setSelectedEntityId
+              }
             />
           </div>
         )}
       </aside>
+
+      {selectedEntityId !== null && (
+        <EntityProfileWorkspace
+          entityId={selectedEntityId}
+          onClose={() =>
+            setSelectedEntityId(null)
+          }
+        />
+      )}
     </div>
   );
 }

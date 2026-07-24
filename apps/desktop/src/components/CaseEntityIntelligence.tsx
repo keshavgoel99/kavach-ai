@@ -8,6 +8,10 @@ import './CaseEntityIntelligence.css';
 
 interface CaseEntityIntelligenceProps {
   detail: CaseDetail;
+
+  onOpenEntity: (
+    entityId: number,
+  ) => void;
 }
 
 function formatDate(
@@ -137,8 +141,13 @@ function EmptyState({
 
 function EntityProfile({
   entity,
+  onOpenEntity,
 }: {
   entity: CaseResolvedEntity;
+
+  onOpenEntity: (
+    entityId: number,
+  ) => void;
 }) {
   const totalConnections =
     entity.identifiers.length +
@@ -197,6 +206,23 @@ function EntityProfile({
       </summary>
 
       <div className="entity-profile__body">
+        <button
+          type="button"
+          className="entity-profile__open-workspace"
+          onClick={() =>
+            onOpenEntity(entity.entityId)
+          }
+        >
+          <span>
+            Open cross-case profile
+          </span>
+
+          <strong>
+            View {entity.accusedIds.length}
+            {' '}
+            accused links →
+          </strong>
+        </button>
         <div className="entity-profile__facts">
           <div>
             <span>Date of birth</span>
@@ -709,6 +735,7 @@ function TransactionCard({
 
 export function CaseEntityIntelligence({
   detail,
+  onOpenEntity,
 }: CaseEntityIntelligenceProps) {
   return (
     <>
@@ -741,6 +768,7 @@ export function CaseEntityIntelligence({
                 <EntityProfile
                   key={entity.entityId}
                   entity={entity}
+                  onOpenEntity={onOpenEntity}
                 />
               ),
             )}
