@@ -9,6 +9,7 @@ import type {
 } from '@kavach/shared-types';
 
 import './CaseDetailDrawer.css';
+import { CaseEntityIntelligence } from './CaseEntityIntelligence';
 
 interface CaseDetailDrawerProps {
   caseId: number | null;
@@ -1074,6 +1075,10 @@ export function CaseDetailDrawer({
                 </div>
               )}
             </section>
+
+            <CaseEntityIntelligence
+              detail={detail}
+            />
           </div>
         )}
       </aside>
