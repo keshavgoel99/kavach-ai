@@ -1,5 +1,10 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
-import type { ApiHealth } from '@kavach/shared-types';
+import type {
+  ApiHealth,
+  InvestigationGraphQuery,
+  InvestigationGraphRelationshipType,
+  InvestigationGraphResponse,
+} from '@kavach/shared-types';
 
 import {
   fetchCaseById,
@@ -7,6 +12,7 @@ import {
   fetchCaseFilterOptions,
   fetchCaseList,
   fetchEntityById,
+  requestJson,
 } from './case-api-client';
 
 import type {
@@ -24,7 +30,188 @@ declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 const IPC_CHANNELS = {
   getRuntimeInfo: 'kavach:system:get-runtime-info',
   getApiHealth: 'kavach:api:get-health',
+  getGraphNeighborhood: 'kavach:graph:get-neighborhood',
 } as const;
+
+const ALLOWED_GRAPH_RELATIONSHIPS =
+  new Set<
+    InvestigationGraphRelationshipType
+  >([
+    'OCCURRED_AT',
+    'ACCUSED_IN',
+    'USES_IDENTIFIER',
+    'CO_ACCUSED',
+    'LINKED_TO_ACCOUNT',
+    'MEMBER_OF',
+    'GANG_ASSOCIATION',
+    'CO_WORKER',
+    'FAMILY',
+    'SHARED_ADDRESS',
+  ]);
+
+function validateGraphQuery(
+  value: unknown,
+): InvestigationGraphQuery {
+  if (
+    typeof value !== 'object' ||
+    value === null
+  ) {
+    throw new Error(
+      'A graph query object is required.',
+    );
+  }
+
+  const supplied =
+    value as Partial<
+      InvestigationGraphQuery
+    >;
+
+  if (
+    typeof supplied.rootNodeId !==
+    'string'
+  ) {
+    throw new Error(
+      'rootNodeId must be a string.',
+    );
+  }
+
+  const rootNodeId =
+    supplied.rootNodeId.trim();
+
+  if (
+    !rootNodeId ||
+    rootNodeId.length > 128
+  ) {
+    throw new Error(
+      'rootNodeId is invalid.',
+    );
+  }
+
+  const depth =
+    supplied.depth ?? 1;
+
+  if (
+    depth !== 1 &&
+    depth !== 2
+  ) {
+    throw new Error(
+      'depth must be either 1 or 2.',
+    );
+  }
+
+  const nodeLimit =
+    supplied.nodeLimit ?? 80;
+
+  if (
+    !Number.isSafeInteger(nodeLimit) ||
+    nodeLimit < 2 ||
+    nodeLimit > 200
+  ) {
+    throw new Error(
+      'nodeLimit must be between 2 and 200.',
+    );
+  }
+
+  let relationshipTypes:
+    InvestigationGraphRelationshipType[] |
+    undefined;
+
+  if (
+    supplied.relationshipTypes !==
+    undefined
+  ) {
+    if (
+      !Array.isArray(
+        supplied.relationshipTypes,
+      )
+    ) {
+      throw new Error(
+        'relationshipTypes must be an array.',
+      );
+    }
+
+    const uniqueRelationships =
+      new Set<
+        InvestigationGraphRelationshipType
+      >();
+
+    supplied.relationshipTypes.forEach(
+      (relationshipType) => {
+        if (
+          typeof relationshipType !==
+            'string' ||
+          !ALLOWED_GRAPH_RELATIONSHIPS.has(
+            relationshipType as
+              InvestigationGraphRelationshipType,
+          )
+        ) {
+          throw new Error(
+            `Unsupported graph relationship: ${String(
+              relationshipType,
+            )}`,
+          );
+        }
+
+        uniqueRelationships.add(
+          relationshipType as
+            InvestigationGraphRelationshipType,
+        );
+      },
+    );
+
+    if (
+      uniqueRelationships.size > 0
+    ) {
+      relationshipTypes = [
+        ...uniqueRelationships,
+      ];
+    }
+  }
+
+  return {
+    rootNodeId,
+    depth,
+    nodeLimit,
+    relationshipTypes,
+  };
+}
+
+function createGraphNeighborhoodPath(
+  query: InvestigationGraphQuery,
+): string {
+  const parameters =
+    new URLSearchParams();
+
+  parameters.set(
+    'rootNodeId',
+    query.rootNodeId,
+  );
+
+  parameters.set(
+    'depth',
+    String(query.depth ?? 1),
+  );
+
+  parameters.set(
+    'nodeLimit',
+    String(query.nodeLimit ?? 80),
+  );
+
+  if (
+    query.relationshipTypes &&
+    query.relationshipTypes.length > 0
+  ) {
+    parameters.set(
+      'relationshipTypes',
+      query.relationshipTypes.join(','),
+    );
+  }
+
+  return (
+    '/graph/neighborhood?' +
+    parameters.toString()
+  );
+}
 
 const API_BASE_URL =
   process.env.KAVACH_API_BASE_URL ?? 'http://127.0.0.1:4000';
@@ -93,6 +280,27 @@ function registerIpcHandlers(): void {
       _event,
       entityId: number,
     ) => fetchEntityById(entityId),
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.getGraphNeighborhood,
+    async (
+      _event,
+      suppliedQuery: unknown,
+    ): Promise<InvestigationGraphResponse> => {
+      const query =
+        validateGraphQuery(
+          suppliedQuery,
+        );
+
+      return requestJson<
+        InvestigationGraphResponse
+      >(
+        createGraphNeighborhoodPath(
+          query,
+        ),
+      );
+    },
   );
 
   ipcMain.handle(

@@ -39,7 +39,7 @@ function getApiErrorMessage(
   return `Kavach API request failed with status ${status}.`;
 }
 
-async function requestJson<ResponseBody>(
+export async function requestJson<ResponseBody>(
   path: string,
 ): Promise<ResponseBody> {
   const response = await fetch(

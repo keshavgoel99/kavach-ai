@@ -13,6 +13,10 @@ import {
   createEntityRouter,
 } from './entities/entity-routes';
 
+import {
+  createGraphRouter,
+} from './graph/graph-routes';
+
 export function createApp() {
   const app = express();
 
@@ -49,6 +53,11 @@ export function createApp() {
   app.use(
     '/api/v1/entities',
     createEntityRouter(),
+  );
+
+  app.use(
+    '/api/v1/graph',
+    createGraphRouter(),
   );
 
   app.use((request, response) => {

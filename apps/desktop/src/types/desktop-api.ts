@@ -4,6 +4,9 @@ import type {
 import type {
   EntityDesktopApi,
 } from './entity-bridge';
+import type {
+  GraphDesktopApi,
+} from './graph-bridge';
 import type { ApiHealth } from '@kavach/shared-types';
 
 export interface RuntimeInfo {
@@ -27,4 +30,6 @@ export interface KavachDesktopApi {
   };
 
   entities: EntityDesktopApi;
+
+  graph: GraphDesktopApi;
 }

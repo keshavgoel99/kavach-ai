@@ -10,6 +10,8 @@ const IPC_CHANNELS = {
   getCaseById: 'kavach:cases:get-by-id',
 
   getEntityById: 'kavach:entities:get-by-id',
+
+  getGraphNeighborhood: 'kavach:graph:get-neighborhood',
 } as const;
 
 const kavachDesktopApi: KavachDesktopApi = {
@@ -58,6 +60,16 @@ const kavachDesktopApi: KavachDesktopApi = {
       ipcRenderer.invoke(
         IPC_CHANNELS.getEntityById,
         entityId,
+      ),
+  },
+
+  graph: {
+    getNeighborhood: (
+      query,
+    ) =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS.getGraphNeighborhood,
+        query,
       ),
   },
 };
