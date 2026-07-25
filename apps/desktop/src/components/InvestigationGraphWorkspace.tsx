@@ -20,6 +20,11 @@ import './InvestigationGraphWorkspace.css';
 interface InvestigationGraphWorkspaceProps {
   rootNodeId: string;
   title: string;
+
+  onOpenEntity: (
+    entityId: number,
+  ) => void;
+
   onClose: () => void;
 }
 
@@ -306,6 +311,36 @@ function getOtherNodeId(
     : edge.sourceNodeId;
 }
 
+function parseNumericNodeId(
+  nodeId: string,
+  expectedType: 'CASE' | 'PERSON',
+): number | null {
+  const prefix =
+    `${expectedType}:`;
+
+  if (!nodeId.startsWith(prefix)) {
+    return null;
+  }
+
+  const rawId =
+    nodeId.slice(prefix.length);
+
+  if (!/^\d+$/.test(rawId)) {
+    return null;
+  }
+
+  const parsed = Number(rawId);
+
+  if (
+    !Number.isSafeInteger(parsed) ||
+    parsed < 1
+  ) {
+    return null;
+  }
+
+  return parsed;
+}
+
 function EmptyState({
   children,
 }: {
@@ -321,6 +356,7 @@ function EmptyState({
 export function InvestigationGraphWorkspace({
   rootNodeId,
   title,
+  onOpenEntity,
   onClose,
 }: InvestigationGraphWorkspaceProps) {
   const [
@@ -359,9 +395,28 @@ export function InvestigationGraphWorkspace({
   >([...RELATIONSHIP_TYPES]);
 
   const [
+    activeRootNodeId,
+    setActiveRootNodeId,
+  ] = useState(rootNodeId);
+
+  const [
+    activeTitle,
+    setActiveTitle,
+  ] = useState(title);
+
+  const [
     selectedNodeId,
     setSelectedNodeId,
   ] = useState(rootNodeId);
+
+  useEffect(() => {
+    setActiveRootNodeId(rootNodeId);
+    setActiveTitle(title);
+    setSelectedNodeId(rootNodeId);
+  }, [
+    rootNodeId,
+    title,
+  ]);
 
   useEffect(() => {
     let active = true;
@@ -377,7 +432,9 @@ export function InvestigationGraphWorkspace({
 
     window.kavach.graph
       .getNeighborhood({
-        rootNodeId,
+        rootNodeId:
+          activeRootNodeId,
+
         depth,
         nodeLimit,
         relationshipTypes,
@@ -423,7 +480,7 @@ export function InvestigationGraphWorkspace({
       active = false;
     };
   }, [
-    rootNodeId,
+    activeRootNodeId,
     depth,
     nodeLimit,
     selectedRelationships,
@@ -502,6 +559,63 @@ export function InvestigationGraphWorkspace({
       (node) =>
         node.nodeId === selectedNodeId,
     ) ?? null;
+
+  const selectedPersonId =
+    selectedNode?.nodeType === 'PERSON'
+      ? parseNumericNodeId(
+          selectedNode.nodeId,
+          'PERSON',
+        )
+      : null;
+
+  const selectedCaseId =
+    selectedNode?.nodeType === 'CASE'
+      ? parseNumericNodeId(
+          selectedNode.nodeId,
+          'CASE',
+        )
+      : null;
+
+  const canRecenterSelectedNode =
+    selectedNode !== null &&
+    (
+      selectedCaseId !== null ||
+      selectedPersonId !== null
+    ) &&
+    selectedNode.nodeId !==
+      activeRootNodeId;
+
+  const recenterOnSelectedNode = () => {
+    if (
+      !selectedNode ||
+      (
+        selectedNode.nodeType !== 'CASE' &&
+        selectedNode.nodeType !== 'PERSON'
+      )
+    ) {
+      return;
+    }
+
+    setActiveRootNodeId(
+      selectedNode.nodeId,
+    );
+
+    setActiveTitle(
+      selectedNode.nodeType === 'CASE'
+        ? `Case graph · ${selectedNode.label}`
+        : `Entity graph · ${selectedNode.label}`,
+    );
+
+    setSelectedNodeId(
+      selectedNode.nodeId,
+    );
+  };
+
+  const returnToStartingRoot = () => {
+    setActiveRootNodeId(rootNodeId);
+    setActiveTitle(title);
+    setSelectedNodeId(rootNodeId);
+  };
 
   const selectedEdges =
     useMemo(
@@ -582,11 +696,11 @@ export function InvestigationGraphWorkspace({
             </span>
 
             <strong>
-              {title}
+              {activeTitle}
             </strong>
 
             <small>
-              Root node: {rootNodeId}
+              Root node: {activeRootNodeId}
             </small>
           </div>
 
@@ -1017,6 +1131,63 @@ export function InvestigationGraphWorkspace({
                             'Unavailable'}
                         </strong>
                       </div>
+                    </div>
+
+                    <div className="investigation-graph__node-actions">
+                      {canRecenterSelectedNode && (
+                        <button
+                          type="button"
+                          onClick={recenterOnSelectedNode}
+                        >
+                          <span>
+                            Recenter network
+                          </span>
+
+                          <strong>
+                            Explore from this{' '}
+                            {selectedNode?.nodeType ===
+                            'CASE'
+                              ? 'case'
+                              : 'person'}
+                            {' '}→
+                          </strong>
+                        </button>
+                      )}
+
+                      {selectedPersonId !== null && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onOpenEntity(
+                              selectedPersonId,
+                            )
+                          }
+                        >
+                          <span>
+                            Canonical person
+                          </span>
+
+                          <strong>
+                            Open entity profile →
+                          </strong>
+                        </button>
+                      )}
+
+                      {activeRootNodeId !== rootNodeId && (
+                        <button
+                          type="button"
+                          className="investigation-graph__node-action--secondary"
+                          onClick={returnToStartingRoot}
+                        >
+                          <span>
+                            Starting point
+                          </span>
+
+                          <strong>
+                            Return to original root
+                          </strong>
+                        </button>
+                      )}
                     </div>
 
                     <section className="investigation-graph__connections">

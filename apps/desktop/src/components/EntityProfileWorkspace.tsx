@@ -16,6 +16,12 @@ import './EntityProfileWorkspace.css';
 
 interface EntityProfileWorkspaceProps {
   entityId: number;
+
+  onOpenGraph: (
+    rootNodeId: string,
+    title: string,
+  ) => void;
+
   onClose: () => void;
 }
 
@@ -110,6 +116,7 @@ function EmptyState({
 
 export function EntityProfileWorkspace({
   entityId,
+  onOpenGraph,
   onClose,
 }: EntityProfileWorkspaceProps) {
   const [
@@ -372,6 +379,35 @@ export function EntityProfileWorkspace({
                 </strong>
               </div>
             </section>
+
+            <div className="entity-workspace__graph-action">
+              <div>
+                <span>
+                  PERSON-CENTRED NETWORK
+                </span>
+
+                <strong>
+                  Explore this entity across FIRs,
+                  identifiers, accounts, associates,
+                  locations, and gangs
+                </strong>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  onOpenGraph(
+                    `PERSON:${profile.entityId}`,
+                    `Entity graph · ${profile.canonicalName}`,
+                  )
+                }
+              >
+                Open entity graph
+                <span aria-hidden="true">
+                  →
+                </span>
+              </button>
+            </div>
 
             <div className="entity-workspace__layout">
               <main>

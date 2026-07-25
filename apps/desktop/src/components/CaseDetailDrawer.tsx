@@ -198,9 +198,12 @@ export function CaseDetailDrawer({
   ] = useState<number | null>(null);
 
   const [
-    graphRootNodeId,
-    setGraphRootNodeId,
-  ] = useState<string | null>(null);
+    graphWorkspace,
+    setGraphWorkspace,
+  ] = useState<{
+    rootNodeId: string;
+    title: string;
+  } | null>(null);
 
   useEffect(() => {
     if (caseId === null) {
@@ -208,7 +211,7 @@ export function CaseDetailDrawer({
       setError(null);
       setLoading(false);
       setSelectedEntityId(null);
-      setGraphRootNodeId(null);
+      setGraphWorkspace(null);
       return undefined;
     }
 
@@ -218,7 +221,7 @@ export function CaseDetailDrawer({
     setError(null);
     setLoading(true);
     setSelectedEntityId(null);
-    setGraphRootNodeId(null);
+    setGraphWorkspace(null);
 
     async function loadDetail(): Promise<void> {
       try {
@@ -1140,9 +1143,14 @@ export function CaseDetailDrawer({
                 <button
                   type="button"
                   onClick={() =>
-                    setGraphRootNodeId(
-                      `CASE:${detail.caseId}`,
-                    )
+                    setGraphWorkspace({
+                      rootNodeId:
+                        `CASE:${detail.caseId}`,
+
+                      title:
+                        `Investigation graph · ` +
+                        detail.crimeNumber,
+                    })
                   }
                 >
                   Open graph explorer
@@ -1159,21 +1167,35 @@ export function CaseDetailDrawer({
       {selectedEntityId !== null && (
         <EntityProfileWorkspace
           entityId={selectedEntityId}
+          onOpenGraph={(
+            rootNodeId,
+            graphTitle,
+          ) =>
+            setGraphWorkspace({
+              rootNodeId,
+              title: graphTitle,
+            })
+          }
           onClose={() =>
             setSelectedEntityId(null)
           }
         />
       )}
 
-      {graphRootNodeId !== null && (
+      {graphWorkspace !== null && (
         <InvestigationGraphWorkspace
-          rootNodeId={graphRootNodeId}
-          title={
-            `Investigation graph · ` +
-            (detail?.crimeNumber ?? '')
+          rootNodeId={
+            graphWorkspace.rootNodeId
           }
+          title={
+            graphWorkspace.title
+          }
+          onOpenEntity={(entityId) => {
+            setGraphWorkspace(null);
+            setSelectedEntityId(entityId);
+          }}
           onClose={() =>
-            setGraphRootNodeId(null)
+            setGraphWorkspace(null)
           }
         />
       )}

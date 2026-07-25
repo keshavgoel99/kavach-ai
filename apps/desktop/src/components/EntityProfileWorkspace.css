@@ -573,6 +573,73 @@
   }
 }
 
+.entity-workspace__graph-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 11px;
+  padding: 14px;
+  border:
+    1px solid rgba(117, 223, 196, 0.2);
+  border-radius: 11px;
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(117, 223, 196, 0.09),
+      transparent 48%
+    ),
+    rgba(7, 12, 19, 0.46);
+}
+
+.entity-workspace__graph-action > div {
+  min-width: 0;
+}
+
+.entity-workspace__graph-action
+  > div
+  > span {
+  color: #75dfc4;
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+}
+
+.entity-workspace__graph-action strong {
+  display: block;
+  max-width: 650px;
+  margin-top: 6px;
+  color: rgba(237, 243, 248, 0.74);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.entity-workspace__graph-action button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 13px;
+  border:
+    1px solid rgba(117, 223, 196, 0.3);
+  border-radius: 9px;
+  background:
+    rgba(117, 223, 196, 0.09);
+  color: #92ead5;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.entity-workspace__graph-action
+  button:hover {
+  border-color:
+    rgba(117, 223, 196, 0.5);
+  background:
+    rgba(117, 223, 196, 0.14);
+}
+
 @media (max-width: 900px) {
   .entity-workspace__hero {
     grid-template-columns:
@@ -616,5 +683,14 @@
   .entity-workspace__case-body > header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .entity-workspace__graph-action {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .entity-workspace__graph-action button {
+    justify-content: center;
   }
 }
