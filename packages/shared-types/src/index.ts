@@ -67,3 +67,5 @@ export type {
   InvestigationGraphRelationshipType,
   InvestigationGraphResponse,
 } from './graph';
+
+export * from './similarity'; 
