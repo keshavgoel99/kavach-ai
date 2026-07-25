@@ -48,6 +48,18 @@ export type {
 } from './case';
 
 export type {
+  CasePriorityAssessment,
+  CasePriorityBand,
+  CasePriorityEvidenceReference,
+  CasePriorityFactor,
+  CasePriorityFactorCode,
+  CasePriorityFactorDirection,
+  CasePriorityQueueItem,
+  CasePriorityQueueQuery,
+  CasePriorityQueueResponse,
+} from './priority';
+
+export type {
   InvestigationGraphEdge,
   InvestigationGraphNode,
   InvestigationGraphNodeType,

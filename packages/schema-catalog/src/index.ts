@@ -34,6 +34,8 @@ export type {
 export {
   CORE_TABLE_COLUMNS,
   CORE_TABLE_PRIMARY_KEYS,
+  CaseMOAssociationRow,
+  ModusOperandiRow,
 } from './core-rows';
 
 export type {

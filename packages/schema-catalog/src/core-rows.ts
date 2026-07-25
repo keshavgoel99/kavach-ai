@@ -5,6 +5,19 @@
  * Empty database values are represented by an empty string.
  */
 export const CORE_TABLE_COLUMNS = {
+  ModusOperandi: [
+    'MOID',
+    'MOName',
+    'Description',
+    'TypicalCrimeSubHead',
+  ],
+
+  CaseMOAssociation: [
+    'CaseMasterID',
+    'MOID',
+    'AssociationType',
+    'Confidence',
+  ],
   State: [
     'StateID',
     'StateName',
@@ -382,6 +395,12 @@ export const CORE_TABLE_COLUMNS = {
   ],
 } as const;
 
+export type ModusOperandiRow =
+  CoreTableRowMap['ModusOperandi'];
+
+export type CaseMOAssociationRow =
+  CoreTableRowMap['CaseMOAssociation'];
+  
 export type CoreTableName =
   keyof typeof CORE_TABLE_COLUMNS;
 
@@ -672,5 +691,14 @@ export const CORE_TABLE_PRIMARY_KEYS = {
   GangMembership: [
     'GangID',
     'EntityID',
+  ],
+
+  ModusOperandi: [
+    'MOID',
+  ],
+
+CaseMOAssociation: [
+    'CaseMasterID',
+    'MOID',
   ],
 } as const;
