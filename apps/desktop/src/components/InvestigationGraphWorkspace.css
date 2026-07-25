@@ -1,0 +1,759 @@
+.investigation-graph {
+  position: fixed;
+  z-index: 4000;
+  inset: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 18px;
+}
+
+.investigation-graph__backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  background:
+    rgba(1, 5, 10, 0.86);
+  backdrop-filter: blur(9px);
+}
+
+.investigation-graph__panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: min(1480px, 98vw);
+  height: calc(100vh - 36px);
+  min-height: 620px;
+  flex-direction: column;
+  overflow: hidden;
+  border:
+    1px solid rgba(117, 223, 196, 0.24);
+  border-radius: 16px;
+  background:
+    linear-gradient(
+      145deg,
+      #09121d 0%,
+      #050a11 65%,
+      #081019 100%
+    );
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.62);
+}
+
+.investigation-graph__topbar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 15px 18px;
+  border-bottom:
+    1px solid rgba(126, 150, 172, 0.14);
+  background:
+    rgba(7, 13, 21, 0.95);
+}
+
+.investigation-graph__topbar > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.investigation-graph__topbar span {
+  color: #75dfc4;
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+}
+
+.investigation-graph__topbar strong {
+  overflow: hidden;
+  color: #edf3f8;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.investigation-graph__topbar small {
+  color: rgba(222, 231, 240, 0.4);
+  font-size: 9px;
+}
+
+.investigation-graph__topbar > button {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border:
+    1px solid rgba(126, 150, 172, 0.2);
+  border-radius: 9px;
+  background:
+    rgba(126, 150, 172, 0.06);
+  color: rgba(237, 243, 248, 0.72);
+  cursor: pointer;
+  font-size: 21px;
+}
+
+.investigation-graph__topbar > button:hover {
+  border-color:
+    rgba(117, 223, 196, 0.42);
+  color: #92ead5;
+}
+
+.investigation-graph__controls {
+  display: grid;
+  grid-template-columns:
+    150px
+    150px
+    minmax(0, 1fr);
+  flex: 0 0 auto;
+  gap: 10px;
+  padding: 11px 16px;
+  border-bottom:
+    1px solid rgba(126, 150, 172, 0.12);
+  background:
+    rgba(3, 8, 14, 0.44);
+}
+
+.investigation-graph__controls > label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.investigation-graph__controls > label > span,
+.investigation-graph__relationship-control
+  > div:first-child
+  > span {
+  color: rgba(222, 231, 240, 0.42);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.investigation-graph__controls select {
+  min-height: 31px;
+  border:
+    1px solid rgba(126, 150, 172, 0.18);
+  border-radius: 7px;
+  background: #08111a;
+  color: rgba(237, 243, 248, 0.76);
+  padding: 0 9px;
+  font-size: 10px;
+}
+
+.investigation-graph__relationship-control {
+  min-width: 0;
+}
+
+.investigation-graph__relationship-control
+  > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.investigation-graph__relationship-control button {
+  border: 0;
+  background: transparent;
+  color: #75dfc4;
+  cursor: pointer;
+  font-size: 8px;
+  font-weight: 750;
+}
+
+.investigation-graph__relationship-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.investigation-graph__relationship-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 7px;
+  border:
+    1px solid rgba(126, 150, 172, 0.14);
+  border-radius: 999px;
+  background:
+    rgba(126, 150, 172, 0.035);
+  cursor: pointer;
+}
+
+.investigation-graph__relationship-options
+  label:has(input:checked) {
+  border-color:
+    rgba(117, 223, 196, 0.27);
+  background:
+    rgba(117, 223, 196, 0.07);
+}
+
+.investigation-graph__relationship-options input {
+  width: 11px;
+  height: 11px;
+  accent-color: #75dfc4;
+}
+
+.investigation-graph__relationship-options span {
+  color: rgba(222, 231, 240, 0.54);
+  font-size: 8px;
+  white-space: nowrap;
+}
+
+.investigation-graph__summary {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  flex: 0 0 auto;
+  gap: 7px;
+  padding: 9px 16px;
+}
+
+.investigation-graph__summary > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border:
+    1px solid rgba(126, 150, 172, 0.11);
+  border-radius: 8px;
+  background:
+    rgba(3, 8, 14, 0.34);
+}
+
+.investigation-graph__summary span {
+  color: rgba(222, 231, 240, 0.4);
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.investigation-graph__summary strong {
+  color: #edf3f8;
+  font-size: 11px;
+}
+
+.investigation-graph__warning {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+  margin: 0 16px 9px;
+  padding: 8px 10px;
+  border:
+    1px solid rgba(245, 191, 91, 0.25);
+  border-radius: 8px;
+  background:
+    rgba(245, 191, 91, 0.06);
+}
+
+.investigation-graph__warning strong {
+  color: #f6cf84;
+  font-size: 9px;
+}
+
+.investigation-graph__warning span {
+  color: rgba(246, 207, 132, 0.65);
+  font-size: 9px;
+}
+
+.investigation-graph__workspace {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    320px;
+  min-height: 0;
+  flex: 1;
+  gap: 10px;
+  padding: 0 16px 11px;
+}
+
+.investigation-graph__canvas {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border:
+    1px solid rgba(126, 150, 172, 0.13);
+  border-radius: 12px;
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(117, 223, 196, 0.06),
+      transparent 37%
+    ),
+    linear-gradient(
+      rgba(126, 150, 172, 0.025) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(126, 150, 172, 0.025) 1px,
+      transparent 1px
+    ),
+    #050b12;
+  background-size:
+    auto,
+    34px 34px,
+    34px 34px,
+    auto;
+}
+
+.investigation-graph__canvas svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 470px;
+}
+
+.investigation-graph__edge {
+  stroke:
+    rgba(126, 150, 172, 0.22);
+  stroke-width: 1.2;
+}
+
+.investigation-graph__edge--highlighted {
+  stroke:
+    rgba(117, 223, 196, 0.68);
+  stroke-width: 2;
+}
+
+.investigation-graph__node {
+  cursor: pointer;
+  outline: none;
+}
+
+.investigation-graph__node-circle {
+  fill: #152231;
+  stroke:
+    rgba(126, 150, 172, 0.68);
+  stroke-width: 2;
+  transition:
+    transform 120ms ease,
+    stroke 120ms ease;
+}
+
+.investigation-graph__node:hover
+.investigation-graph__node-circle,
+.investigation-graph__node:focus
+.investigation-graph__node-circle {
+  stroke: #92ead5;
+  transform: scale(1.13);
+}
+
+.investigation-graph__node--selected
+.investigation-graph__node-circle {
+  stroke: #92ead5;
+  stroke-width: 3;
+  filter:
+    drop-shadow(
+      0 0 9px
+      rgba(117, 223, 196, 0.65)
+    );
+}
+
+.investigation-graph__node--case
+.investigation-graph__node-circle {
+  fill: #17332f;
+  stroke: #75dfc4;
+}
+
+.investigation-graph__node--person
+.investigation-graph__node-circle {
+  fill: #24344a;
+  stroke: #8cb8ef;
+}
+
+.investigation-graph__node--identifier
+.investigation-graph__node-circle {
+  fill: #3b3020;
+  stroke: #f0c16a;
+}
+
+.investigation-graph__node--account
+.investigation-graph__node-circle {
+  fill: #3d2438;
+  stroke: #e99cce;
+}
+
+.investigation-graph__node--location
+.investigation-graph__node-circle {
+  fill: #25351e;
+  stroke: #9ccd74;
+}
+
+.investigation-graph__node--gang
+.investigation-graph__node-circle {
+  fill: #442329;
+  stroke: #f07c89;
+}
+
+.investigation-graph__root-ring {
+  fill: none;
+  stroke:
+    rgba(117, 223, 196, 0.3);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.investigation-graph__node-type {
+  fill: rgba(237, 243, 248, 0.83);
+  font-size: 7px;
+  font-weight: 850;
+  pointer-events: none;
+}
+
+.investigation-graph__node-label {
+  fill: rgba(222, 231, 240, 0.68);
+  font-size: 8px;
+  pointer-events: none;
+}
+
+.investigation-graph__inspector {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 14px;
+  border:
+    1px solid rgba(126, 150, 172, 0.13);
+  border-radius: 12px;
+  background:
+    rgba(5, 11, 18, 0.82);
+}
+
+.investigation-graph__inspector
+  > header {
+  padding-bottom: 12px;
+  border-bottom:
+    1px solid rgba(126, 150, 172, 0.11);
+}
+
+.investigation-graph__inspector
+  > header
+  span {
+  color: #75dfc4;
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+}
+
+.investigation-graph__inspector h3 {
+  margin: 7px 0 4px;
+  color: #edf3f8;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.investigation-graph__inspector
+  > header
+  small {
+  color: rgba(222, 231, 240, 0.4);
+  font-size: 9px;
+}
+
+.investigation-graph__node-facts {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 11px;
+}
+
+.investigation-graph__node-facts > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+  padding: 9px;
+  border-radius: 8px;
+  background:
+    rgba(126, 150, 172, 0.045);
+}
+
+.investigation-graph__node-facts span {
+  color: rgba(222, 231, 240, 0.38);
+  font-size: 7px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.investigation-graph__node-facts strong {
+  overflow: hidden;
+  color: rgba(237, 243, 248, 0.7);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.investigation-graph__connections {
+  margin-top: 16px;
+}
+
+.investigation-graph__connections
+  > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.investigation-graph__connections h4 {
+  margin: 0;
+  color: rgba(237, 243, 248, 0.74);
+  font-size: 10px;
+}
+
+.investigation-graph__connections
+  > header
+  span {
+  display: flex;
+  min-width: 19px;
+  height: 19px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background:
+    rgba(117, 223, 196, 0.09);
+  color: #92ead5;
+  font-size: 8px;
+}
+
+.investigation-graph__connections
+  > div {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.investigation-graph__connections article {
+  padding: 10px;
+  border:
+    1px solid rgba(126, 150, 172, 0.12);
+  border-radius: 8px;
+  background:
+    rgba(3, 8, 14, 0.4);
+}
+
+.investigation-graph__connections
+  article
+  header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.investigation-graph__connections
+  article
+  header
+  strong {
+  color: #92ead5;
+  font-size: 9px;
+}
+
+.investigation-graph__connections
+  article
+  header
+  span {
+  color: rgba(237, 243, 248, 0.62);
+  font-size: 8px;
+}
+
+.investigation-graph__connections
+  article
+  p {
+  margin: 7px 0;
+  color: #edf3f8;
+  font-size: 10px;
+}
+
+.investigation-graph__connections
+  article
+  small {
+  display: block;
+  color: rgba(222, 231, 240, 0.48);
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.investigation-graph__connections
+  article
+  footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top:
+    1px solid rgba(126, 150, 172, 0.09);
+  color: rgba(222, 231, 240, 0.34);
+  font-size: 7px;
+}
+
+.investigation-graph__legend {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px 14px;
+  padding: 0 16px 12px;
+}
+
+.investigation-graph__legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: rgba(222, 231, 240, 0.44);
+  font-size: 8px;
+}
+
+.investigation-graph__legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #75dfc4;
+}
+
+.investigation-graph__legend-dot--person {
+  background: #8cb8ef;
+}
+
+.investigation-graph__legend-dot--identifier {
+  background: #f0c16a;
+}
+
+.investigation-graph__legend-dot--account {
+  background: #e99cce;
+}
+
+.investigation-graph__legend-dot--location {
+  background: #9ccd74;
+}
+
+.investigation-graph__legend-dot--gang {
+  background: #f07c89;
+}
+
+.investigation-graph__state {
+  display: flex;
+  min-height: 430px;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  padding: 30px;
+  text-align: center;
+}
+
+.investigation-graph__state strong {
+  color: #edf3f8;
+  font-size: 13px;
+}
+
+.investigation-graph__state span {
+  color: rgba(222, 231, 240, 0.48);
+  font-size: 10px;
+}
+
+.investigation-graph__state button {
+  margin-top: 6px;
+  padding: 8px 12px;
+  border:
+    1px solid rgba(117, 223, 196, 0.28);
+  border-radius: 8px;
+  background:
+    rgba(117, 223, 196, 0.07);
+  color: #92ead5;
+  cursor: pointer;
+}
+
+.investigation-graph__state--error
+  strong {
+  color: #ffaaaa;
+}
+
+.investigation-graph__loader {
+  width: 28px;
+  height: 28px;
+  border:
+    2px solid rgba(117, 223, 196, 0.16);
+  border-top-color: #75dfc4;
+  border-radius: 50%;
+  animation:
+    investigation-graph-spin
+    0.75s linear infinite;
+}
+
+.investigation-graph__empty {
+  padding: 15px;
+  border:
+    1px dashed rgba(126, 150, 172, 0.18);
+  border-radius: 9px;
+  color: rgba(222, 231, 240, 0.4);
+  font-size: 9px;
+  text-align: center;
+}
+
+@keyframes investigation-graph-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 980px) {
+  .investigation-graph {
+    padding: 0;
+  }
+
+  .investigation-graph__panel {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    border-radius: 0;
+  }
+
+  .investigation-graph__controls {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .investigation-graph__relationship-control {
+    grid-column: 1 / -1;
+  }
+
+  .investigation-graph__workspace {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+
+  .investigation-graph__canvas {
+    min-height: 520px;
+  }
+
+  .investigation-graph__inspector {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 620px) {
+  .investigation-graph__controls,
+  .investigation-graph__summary,
+  .investigation-graph__node-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .investigation-graph__relationship-control {
+    grid-column: auto;
+  }
+
+  .investigation-graph__warning {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

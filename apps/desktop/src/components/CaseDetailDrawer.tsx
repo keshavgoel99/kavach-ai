@@ -13,6 +13,9 @@ import { CaseEntityIntelligence } from './CaseEntityIntelligence';
 import {
   EntityProfileWorkspace,
 } from './EntityProfileWorkspace';
+import {
+  InvestigationGraphWorkspace,
+} from './InvestigationGraphWorkspace';
 
 interface CaseDetailDrawerProps {
   caseId: number | null;
@@ -194,12 +197,18 @@ export function CaseDetailDrawer({
     setSelectedEntityId,
   ] = useState<number | null>(null);
 
+  const [
+    graphRootNodeId,
+    setGraphRootNodeId,
+  ] = useState<string | null>(null);
+
   useEffect(() => {
     if (caseId === null) {
       setDetail(null);
       setError(null);
       setLoading(false);
       setSelectedEntityId(null);
+      setGraphRootNodeId(null);
       return undefined;
     }
 
@@ -209,6 +218,7 @@ export function CaseDetailDrawer({
     setError(null);
     setLoading(true);
     setSelectedEntityId(null);
+    setGraphRootNodeId(null);
 
     async function loadDetail(): Promise<void> {
       try {
@@ -1092,6 +1102,56 @@ export function CaseDetailDrawer({
                 setSelectedEntityId
               }
             />
+
+            <section className="case-detail__section">
+              <div className="case-detail__section-heading">
+                <div>
+                  <span>14</span>
+                  <h3>
+                    Investigation Graph
+                  </h3>
+                </div>
+
+                <small>
+                  Evidence-backed network
+                </small>
+              </div>
+
+              <div className="case-detail__graph-launcher">
+                <div>
+                  <span>
+                    CASE-CENTRED LINK ANALYSIS
+                  </span>
+
+                  <strong>
+                    Explore people, locations,
+                    identifiers, accounts, gangs,
+                    and associations
+                  </strong>
+
+                  <p>
+                    Start with one-hop connections,
+                    then expand to two hops or narrow
+                    the graph using relationship
+                    filters.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setGraphRootNodeId(
+                      `CASE:${detail.caseId}`,
+                    )
+                  }
+                >
+                  Open graph explorer
+                  <span aria-hidden="true">
+                    →
+                  </span>
+                </button>
+              </div>
+            </section>
           </div>
         )}
       </aside>
@@ -1101,6 +1161,19 @@ export function CaseDetailDrawer({
           entityId={selectedEntityId}
           onClose={() =>
             setSelectedEntityId(null)
+          }
+        />
+      )}
+
+      {graphRootNodeId !== null && (
+        <InvestigationGraphWorkspace
+          rootNodeId={graphRootNodeId}
+          title={
+            `Investigation graph · ` +
+            (detail?.crimeNumber ?? '')
+          }
+          onClose={() =>
+            setGraphRootNodeId(null)
           }
         />
       )}

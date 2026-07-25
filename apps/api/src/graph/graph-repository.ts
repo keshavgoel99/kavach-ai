@@ -38,7 +38,7 @@ function resolveDatasetRoot(): string {
     process.env.KAVACH_DATASET_ROOT?.trim();
 
   const candidates = [
-    configuredRoot || null,
+    configuredRoot,
 
     resolve(
       process.cwd(),
@@ -48,33 +48,72 @@ function resolveDatasetRoot(): string {
 
     resolve(
       process.cwd(),
+      'data',
+      'raw',
+      'KAVACH_Synthetic_Crime_Dataset_v1',
+    ),
+
+    resolve(
+      process.cwd(),
+      '..',
+      '..',
+      'data',
+      'KAVACH_Synthetic_Crime_Dataset_v1',
+    ),
+
+    resolve(
+      process.cwd(),
+      '..',
+      '..',
+      'data',
+      'raw',
+      'KAVACH_Synthetic_Crime_Dataset_v1',
+    ),
+
+    resolve(
+      __dirname,
+      '..',
+      '..',
       '..',
       '..',
       'data',
       'KAVACH_Synthetic_Crime_Dataset_v1',
     ),
   ].filter(
-    (candidate): candidate is string =>
-      candidate !== null,
+    (
+      candidate,
+    ): candidate is string =>
+      Boolean(candidate),
   );
 
   const matchedRoot =
-    candidates.find((candidate) =>
-      existsSync(
-        join(
-          candidate,
-          'graph',
-          'nodes.csv',
-        ),
-      ),
-    );
+    candidates.find((candidate) => {
+      const nodesPath = join(
+        candidate,
+        'graph',
+        'nodes.csv',
+      );
+
+      const edgesPath = join(
+        candidate,
+        'graph',
+        'edges.csv',
+      );
+
+      return (
+        existsSync(nodesPath) &&
+        existsSync(edgesPath)
+      );
+    });
 
   if (!matchedRoot) {
     throw new Error(
       [
         'The KAVACH graph dataset could not be located.',
-        'Set KAVACH_DATASET_ROOT to the extracted',
-        'KAVACH_Synthetic_Crime_Dataset_v1 folder.',
+        `Current working directory: ${process.cwd()}.`,
+        `Checked: ${candidates.join(' | ')}.`,
+        'Set KAVACH_DATASET_ROOT to the folder',
+        'that directly contains graph\\nodes.csv.',
       ].join(' '),
     );
   }
