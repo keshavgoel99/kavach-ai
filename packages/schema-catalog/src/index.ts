@@ -86,3 +86,21 @@ export type {
   VehicleRow,
   VictimRow,
 } from './core-rows';
+
+export {
+  GRAPH_EDGE_COLUMNS,
+  GRAPH_EDGE_PRIMARY_KEY,
+  GRAPH_NODE_COLUMNS,
+  GRAPH_NODE_PRIMARY_KEY,
+  GRAPH_NODE_TYPES,
+  GRAPH_RELATIONSHIP_TYPES,
+} from './graph';
+
+export type {
+  GraphEdgeColumn,
+  GraphEdgeRow,
+  GraphNodeColumn,
+  GraphNodeRow,
+  GraphNodeType,
+  GraphRelationshipType,
+} from './graph';

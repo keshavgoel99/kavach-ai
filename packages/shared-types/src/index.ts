@@ -46,3 +46,12 @@ export type {
   PaginationInput,
   PaginationMetadata,
 } from './case';
+
+export type {
+  InvestigationGraphEdge,
+  InvestigationGraphNode,
+  InvestigationGraphNodeType,
+  InvestigationGraphQuery,
+  InvestigationGraphRelationshipType,
+  InvestigationGraphResponse,
+} from './graph';

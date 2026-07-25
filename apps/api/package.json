@@ -9,7 +9,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "data:validate": "tsx src/scripts/validate-dataset.ts"
+    "data:validate": "tsx src/scripts/validate-dataset.ts",
+    "graph:validate": "tsx src/data/validate-graph-dataset.ts"
   },
   "keywords": [],
   "author": "",
