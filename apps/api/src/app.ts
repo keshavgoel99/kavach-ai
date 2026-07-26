@@ -21,6 +21,10 @@ import {
   createPriorityRouter,
 } from './priority/priority-routes';
 
+import {
+  createSimilarityRouter,
+} from './similarity/similarity-routes';
+
 export function createApp() {
   const app = express();
 
@@ -67,6 +71,11 @@ export function createApp() {
   app.use(
     '/api/v1',
     createPriorityRouter(),
+  );
+
+  app.use(
+    '/api/v1',
+    createSimilarityRouter(),
   );
 
   app.use((request, response) => {
