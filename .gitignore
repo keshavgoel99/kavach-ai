@@ -35,7 +35,8 @@ out/
 apps/desktop/out/
 dist/
 build/
-release/
+/release/
+/apps/desktop/release/
 
 # Packaged Electron applications
 *.app
