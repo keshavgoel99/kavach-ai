@@ -10,7 +10,8 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "data:validate": "tsx src/scripts/validate-dataset.ts",
-    "graph:validate": "tsx src/data/validate-graph-dataset.ts"
+    "graph:validate": "tsx src/data/validate-graph-dataset.ts",
+    "priority:validate": "tsx src/priority/validate-priority-engine.ts"
   },
   "keywords": [],
   "author": "",
