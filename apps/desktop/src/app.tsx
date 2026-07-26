@@ -12,6 +12,8 @@ import {
   ApiStatusCard,
 } from './components/ApiStatusCard';
 
+import logoFull from './assets/logo-full.png';
+
 import {
   CrimeRecordsPanel,
 } from './components/CrimeRecordsPanel';
@@ -199,17 +201,7 @@ function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand__logo">
-            K
-          </div>
-
-          <div>
-            <h1>Kavach AI</h1>
-
-            <p>
-              Crime Intelligence
-            </p>
-          </div>
+          <img src={logoFull} alt="Kavach AI" className="brand__logo-image" />
         </div>
 
         <nav
@@ -386,11 +378,6 @@ function App() {
             <p className="page-header__description">
               {metadata.description}
             </p>
-          </div>
-
-          <div className="phase-badge">
-            PHASE 2 · OPERATIONAL
-            INTELLIGENCE
           </div>
         </header>
 

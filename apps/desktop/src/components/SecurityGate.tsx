@@ -13,6 +13,7 @@ import type {
 } from '@kavach/shared-types';
 
 import './SecurityGate.css';
+import logoFull from '../assets/logo-full.png';
 
 type GatePhase =
   | 'checking'
@@ -350,13 +351,7 @@ export function SecurityGate({
       <div className="security-gate">
         <div className="security-gate__card">
           <div className="security-gate__brand">
-            <div className="security-gate__logo">
-              K
-            </div>
-
-            <h1>
-              Kavach AI
-            </h1>
+            <img src={logoFull} alt="Kavach AI" className="brand__logo-image" style={{ margin: '0 auto 24px' }} />
           </div>
 
           <p className="security-gate__checking">
@@ -377,8 +372,7 @@ export function SecurityGate({
           onSubmit={bootstrapAdministrator}
         >
           <div className="security-gate__brand">
-            <div className="security-gate__logo">K</div>
-            <h1>Kavach AI</h1>
+            <img src={logoFull} alt="Kavach AI" className="brand__logo-image" style={{ margin: '0 auto 24px' }} />
           </div>
 
           <div className="security-gate__notice">
@@ -494,13 +488,7 @@ export function SecurityGate({
       <div className="security-gate">
         <div className="security-gate__card">
           <div className="security-gate__brand">
-            <div className="security-gate__logo">
-              K
-            </div>
-
-            <h1>
-              Kavach AI
-            </h1>
+            <img src={logoFull} alt="Kavach AI" className="brand__logo-image" style={{ margin: '0 auto 24px' }} />
           </div>
 
           <span className="security-gate__eyebrow">

@@ -19,6 +19,10 @@ const rendererRules: Required<ModuleOptions>['rules'] = [
       },
     ],
   },
+  {
+    test: /\.(png|jpe?g|gif|svg)$/i,
+    type: 'asset/resource',
+  },
 ];
 
 export const rendererConfig: Configuration = {
