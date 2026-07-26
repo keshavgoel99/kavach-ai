@@ -137,9 +137,17 @@
   min-height: 130px;
   padding: 17px;
   border:
-    1px solid rgba(126, 150, 172, 0.15);
+    1px solid rgba(0, 240, 255, 0.15);
   border-radius: 13px;
-  background: rgba(6, 11, 18, 0.52);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+.dashboard-intelligence__metric:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 240, 255, 0.5);
+  box-shadow: 0 10px 20px rgba(0, 240, 255, 0.1);
 }
 
 .dashboard-intelligence__metric::after {

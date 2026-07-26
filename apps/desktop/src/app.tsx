@@ -162,31 +162,7 @@ Readonly<
   },
 };
 
-function StatusCard({
-  title,
-  value,
-  description,
-}: {
-  title: string;
-  value: string;
-  description: string;
-}) {
-  return (
-    <article className="status-card">
-      <p className="status-card__title">
-        {title}
-      </p>
 
-      <strong className="status-card__value">
-        {value}
-      </strong>
-
-      <p className="status-card__description">
-        {description}
-      </p>
-    </article>
-  );
-}
 
 function navigationClass(
   active:
@@ -421,80 +397,7 @@ function App() {
         {activeView ===
           'dashboard' && (
           <div className="page-view">
-            <section
-              className="status-grid"
-              aria-label="Project status"
-            >
-              <StatusCard
-                title="Desktop client"
-                value="Ready"
-                description="Electron and React renderer are operational."
-              />
-
-              <ApiStatusCard />
-
-              <StatusCard
-                title="Priority engine"
-                value="Active"
-                description="Explainable case-review assessments are available."
-              />
-            </section>
-
             <DashboardIntelligencePanel />
-
-            <section className="content-grid">
-              <article className="panel">
-                <div className="panel__header">
-                  <div>
-                    <p className="panel__eyebrow">
-                      Investigation Platform
-                    </p>
-
-                    <h3>
-                      Operational capability
-                    </h3>
-                  </div>
-
-                  <span className="panel__badge panel__badge--complete">
-                    Intelligence active
-                  </span>
-                </div>
-
-                <div className="checklist">
-                  <div className="checklist__item checklist__item--complete">
-                    <span>1</span>
-
-                    Validated FIR repository
-                  </div>
-
-                  <div className="checklist__item checklist__item--complete">
-                    <span>2</span>
-
-                    Canonical entity intelligence
-                  </div>
-
-                  <div className="checklist__item checklist__item--complete">
-                    <span>3</span>
-
-                    Evidence-backed investigation graph
-                  </div>
-
-                  <div className="checklist__item checklist__item--complete">
-                    <span>4</span>
-
-                    Explainable case priority engine
-                  </div>
-
-                  <div className="checklist__item checklist__item--complete">
-                    <span>5</span>
-
-                    Secure Electron API boundary
-                  </div>
-                </div>
-              </article>
-
-              <SystemPanel />
-            </section>
           </div>
         )}
 
