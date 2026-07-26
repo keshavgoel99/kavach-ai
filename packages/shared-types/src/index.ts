@@ -66,6 +66,4 @@ export type {
   InvestigationGraphQuery,
   InvestigationGraphRelationshipType,
   InvestigationGraphResponse,
-} from './graph';
-
-export * from './similarity'; 
+} from './graph';

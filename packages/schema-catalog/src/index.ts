@@ -34,8 +34,6 @@ export type {
 export {
   CORE_TABLE_COLUMNS,
   CORE_TABLE_PRIMARY_KEYS,
-  CaseMOAssociationRow,
-  ModusOperandiRow,
 } from './core-rows';
 
 export type {
@@ -46,6 +44,7 @@ export type {
   ArrestSurrenderAccusedRow,
   ArrestSurrenderRow,
   CaseCategoryRow,
+  CaseMOAssociationRow,
   CaseFinancialLinkRow,
   CaseIdentifierLinkRow,
   CaseMasterRow,
@@ -76,6 +75,7 @@ export type {
   GravityOffenceRow,
   KnownAssociationRow,
   LocationMasterRow,
+  ModusOperandiRow,
   OccupationMasterRow,
   PersonAccountLinkRow,
   PersonEntityRow,

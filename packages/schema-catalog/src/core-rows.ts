@@ -561,6 +561,15 @@ export type GangMembershipRow =
  * surrogate key, so their logical composite key is listed.
  */
 export const CORE_TABLE_PRIMARY_KEYS = {
+  ModusOperandi: [
+    'MOID',
+  ],
+
+  CaseMOAssociation: [
+    'CaseMasterID',
+    'MOID',
+  ],
+
   State: ['StateID'],
   District: ['DistrictID'],
   Unit: ['UnitID'],
@@ -693,12 +702,4 @@ export const CORE_TABLE_PRIMARY_KEYS = {
     'EntityID',
   ],
 
-  ModusOperandi: [
-    'MOID',
-  ],
-
-CaseMOAssociation: [
-    'CaseMasterID',
-    'MOID',
-  ],
 } as const;
