@@ -245,7 +245,7 @@
 .assistant-sources h3 {
   margin: 5px 0 0;
   color: #edf3f8;
-  font-size: 15px;
+  font-size: 18px;
 }
 
 .assistant-confidence {
@@ -286,7 +286,7 @@
 .assistant-answer__text p {
   margin: 0 0 11px;
   color: rgba(237, 243, 248, 0.72);
-  font-size: 10px;
+  font-size: 14px;
   line-height: 1.65;
 }
 
@@ -429,7 +429,7 @@
   color: rgba(222, 231, 240, 0.57);
   background:
     rgba(117, 223, 196, 0.025);
-  font-size: 8px;
+  font-size: 12px;
   line-height: 1.5;
 }
 

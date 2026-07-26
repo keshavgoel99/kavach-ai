@@ -60,17 +60,18 @@ body {
 }
 
 .brand__logo-image {
-  width: auto;
-  height: 48px;
+  width: 220px;
+  height: auto;
   object-fit: contain;
   margin-bottom: 12px;
   filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.4));
+  transform: scale(1.15);
   transition: all 0.3s ease;
 }
 
 .brand__logo-image:hover {
   filter: drop-shadow(0 0 18px rgba(0, 240, 255, 0.8));
-  transform: scale(1.02);
+  transform: scale(1.2);
 }
 
 .navigation {

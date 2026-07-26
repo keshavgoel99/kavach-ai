@@ -179,7 +179,7 @@ export function IntelligenceAssistantPanel() {
 
           <p>
             Retrieval is performed locally.
-            When Gemini is configured, only
+            When generative mode is configured, only
             the highest-ranked masked FIR
             excerpts are sent for grounded
             answer generation. Results do not
@@ -317,7 +317,7 @@ export function IntelligenceAssistantPanel() {
 
               {response.fallbackUsed && (
                 <div className="assistant-answer__fallback">
-                  Gemini generation was unavailable
+                  Generative mode was unavailable
                   or failed grounding validation.
                   The answer below was produced by
                   the deterministic local fallback.

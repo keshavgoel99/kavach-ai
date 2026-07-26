@@ -40,6 +40,9 @@ import {
   setAuthenticationInvalidatedListener,
   getConfiguredApiBaseUrl,
   fetchIntelligenceAssistantResponse,
+  fetchHotspotFilterOptions,
+  fetchHotspotSummary,
+  fetchHotspotLocationTrend,
 } from './case-api-client';
 
 import type {
@@ -447,6 +450,28 @@ function registerIpcHandlers(): void {
   ipcMain.handle(
     'kavach:cases:get-filter-options',
     () => fetchCaseFilterOptions(),
+  );
+
+  ipcMain.handle(
+    'kavach:hotspots:get-filter-options',
+    () => fetchHotspotFilterOptions(),
+  );
+
+  ipcMain.handle(
+    'kavach:hotspots:get-summary',
+    (
+      _event,
+      query: unknown,
+    ) => fetchHotspotSummary(query),
+  );
+
+  ipcMain.handle(
+    'kavach:hotspots:get-location-trend',
+    (
+      _event,
+      locationId: number,
+      query: unknown,
+    ) => fetchHotspotLocationTrend(locationId, query),
   );
 
   ipcMain.handle(
