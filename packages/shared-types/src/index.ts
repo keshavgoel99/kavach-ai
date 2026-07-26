@@ -101,3 +101,19 @@ export type {
   AnalyticsQuery,
 } from './analytics';
 
+export type {
+  ReportCellValue,
+  ReportDocument,
+  ReportExportFormat,
+  ReportExportRequest,
+  ReportExportResponse,
+  ReportKeyValueItem,
+  ReportKeyValueSection,
+  ReportSection,
+  ReportTableColumn,
+  ReportTableRow,
+  ReportTableSection,
+  ReportTextSection,
+} from './report';
+
+

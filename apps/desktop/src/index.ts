@@ -24,6 +24,10 @@ import type {
   CaseListRequest,
 } from './types/case-bridge';
 
+import {
+  exportReportDocument,
+} from './reports/report-exporter';
+
 // Handle creating/removing shortcuts on Windows during installation.
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -46,6 +50,8 @@ const IPC_CHANNELS = {
     'kavach:analytics:get-filter-options',
   getAnalyticsOverview:
     'kavach:analytics:get-overview',
+  exportReport:
+    'kavach:reports:export',
 } as const;
 
 const ALLOWED_GRAPH_RELATIONSHIPS =
@@ -377,6 +383,18 @@ function registerIpcHandlers(): void {
     ) =>
       fetchAnalyticsOverview(
         suppliedQuery,
+      ),
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.exportReport,
+
+    (
+      _event,
+      suppliedRequest: unknown,
+    ) =>
+      exportReportDocument(
+        suppliedRequest,
       ),
   );
 

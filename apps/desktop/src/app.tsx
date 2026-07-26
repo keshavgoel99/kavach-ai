@@ -33,6 +33,10 @@ import {
 } from './components/AnalyticsIntelligencePanel';
 
 import {
+  ReportsWorkspace,
+} from './components/ReportsWorkspace';
+
+import {
   SystemPanel,
 } from './components/SystemPanel';
 
@@ -41,7 +45,8 @@ type AppView =
   | 'records'
   | 'priority'
   | 'hotspots'
-  | 'analytics';
+  | 'analytics'
+  | 'reports';
 
 interface ViewMetadata {
   eyebrow: string;
@@ -106,6 +111,17 @@ Readonly<
 
     description:
       'Compare crime trends, jurisdictions, investigation milestones, outcomes and recurring offence patterns.',
+  },
+
+  reports: {
+    eyebrow:
+      'Controlled Intelligence Export',
+
+    title:
+      'Reports',
+
+    description:
+      'Generate reviewable FIR, analytics and hotspot documents in PDF, HTML, JSON and CSV formats.',
   },
 };
 
@@ -258,10 +274,16 @@ function App() {
           </button>
 
           <button
-            className="navigation__item"
+            className={navigationClass(
+              activeView ===
+                'reports',
+            )}
             type="button"
-            disabled
-            title="Reports are scheduled for a later checkpoint."
+            onClick={() =>
+              setActiveView(
+                'reports',
+              )
+            }
           >
             Reports
           </button>
@@ -401,6 +423,13 @@ function App() {
           'analytics' && (
           <div className="page-view">
             <AnalyticsIntelligencePanel />
+          </div>
+        )}
+
+        {activeView ===
+          'reports' && (
+          <div className="page-view">
+            <ReportsWorkspace />
           </div>
         )}
       </main>

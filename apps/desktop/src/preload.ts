@@ -36,6 +36,9 @@ const IPC_CHANNELS = {
 
   getAnalyticsOverview:
     'kavach:analytics:get-overview',
+
+  exportReport:
+    'kavach:reports:export',
 } as const;
 
 const kavachDesktopApi: KavachDesktopApi = {
@@ -178,6 +181,18 @@ const kavachDesktopApi: KavachDesktopApi = {
           .getAnalyticsOverview,
 
         query,
+      ),
+  },
+
+  reports: {
+    exportDocument: (
+      request,
+    ) =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS
+          .exportReport,
+
+        request,
       ),
   },
 };

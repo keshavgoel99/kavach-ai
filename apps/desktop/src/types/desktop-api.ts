@@ -21,6 +21,10 @@ import type {
 import type {
   AnalyticsDesktopApi,
 } from './analytics-bridge';
+
+import type {
+  ReportDesktopApi,
+} from './report-bridge';
 import type { ApiHealth } from '@kavach/shared-types';
 
 export interface RuntimeInfo {
@@ -53,4 +57,6 @@ export interface KavachDesktopApi {
   hotspots: HotspotDesktopApi;
 
   analytics: AnalyticsDesktopApi;
+
+  reports: ReportDesktopApi;
 }
