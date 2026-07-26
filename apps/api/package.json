@@ -15,7 +15,10 @@
     "similarity:validate": "tsx src/similarity/validate-similarity-engine.ts",
     "similarity:index:validate": "tsx src/similarity/validate-similarity-service.ts",
     "hotspot:validate": "tsx src/hotspots/validate-hotspot-service.ts",
-    "analytics:validate": "tsx src/analytics/validate-analytics-service.ts"
+    "analytics:validate": "tsx src/analytics/validate-analytics-service.ts",
+    "test:unit": "node --import tsx --test src/testing/query-validation.test.ts",
+    "test:integration": "node --import tsx --test --test-concurrency=1 src/testing/api.integration.test.ts",
+    "verify": "npm run typecheck && npm run test:unit && npm run test:integration"
   },
   "keywords": [],
   "author": "",

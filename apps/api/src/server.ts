@@ -1,4 +1,6 @@
-import { createApp } from './app';
+import {
+  app,
+} from './app';
 
 import {
   getCoreDataset,
@@ -39,7 +41,6 @@ async function startServer(): Promise<void> {
   const dataset = await getCoreDataset();
 
   const port = resolvePort();
-  const app = createApp();
 
   const server = app.listen(
     port,

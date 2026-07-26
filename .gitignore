@@ -78,6 +78,11 @@ coverage/
 test-results/
 playwright-report/
 junit.xml
+*.test.log
+
+# Runtime reports and temporary exports
+runtime/
+exports/
 
 
 # ---------------------------------------------------------
