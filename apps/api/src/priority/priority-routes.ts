@@ -2,6 +2,10 @@ import {
   Router,
 } from 'express';
 
+import {
+  requirePermission,
+} from '../security/security-middleware';
+
 import type {
   ApiErrorResponse,
   CasePriorityQueueItem,
@@ -45,6 +49,11 @@ export function createPriorityRouter(): Router {
 
   router.get(
     '/cases/:caseId/priority',
+
+    requirePermission(
+      'VIEW_PRIORITY',
+    ),
+
     async (
       request,
       response,
@@ -53,7 +62,10 @@ export function createPriorityRouter(): Router {
       try {
         const caseId =
           parseCaseId(
-            request.params.caseId,
+            String(
+              request.params.caseId ??
+              '',
+            ),
           );
 
         const service =
@@ -107,6 +119,11 @@ export function createPriorityRouter(): Router {
 
   router.get(
     '/priority-queue',
+
+    requirePermission(
+      'VIEW_PRIORITY',
+    ),
+
     async (
       request,
       response,

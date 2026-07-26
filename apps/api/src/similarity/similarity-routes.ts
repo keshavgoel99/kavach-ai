@@ -2,6 +2,10 @@ import {
   Router,
 } from 'express';
 
+import {
+  requirePermission,
+} from '../security/security-middleware';
+
 import type {
   ApiErrorResponse,
   SimilarCasesResponse,
@@ -40,6 +44,10 @@ export function createSimilarityRouter(): Router {
   router.get(
     '/cases/:caseId/similar',
 
+    requirePermission(
+      'VIEW_SIMILARITY',
+    ),
+
     async (
       request,
       response,
@@ -48,7 +56,10 @@ export function createSimilarityRouter(): Router {
       try {
         const caseId =
           parseCaseId(
-            request.params.caseId,
+            String(
+              request.params.caseId ??
+              '',
+            ),
           );
 
         const query =

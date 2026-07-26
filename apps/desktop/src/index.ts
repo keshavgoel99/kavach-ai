@@ -17,6 +17,13 @@ import {
   fetchSimilarCases,
   fetchAnalyticsFilterOptions,
   fetchAnalyticsOverview,
+  fetchAuthStatus,
+  fetchCurrentAuthSession,
+  fetchSecurityAuditLog,
+  getCachedAuthSession,
+  loginOperator,
+  logoutOperator,
+  recordSecurityAuditEvent,
   requestJson,
 } from './case-api-client';
 
@@ -52,6 +59,24 @@ const IPC_CHANNELS = {
     'kavach:analytics:get-overview',
   exportReport:
     'kavach:reports:export',
+
+  getSecurityStatus:
+    'kavach:security:get-status',
+
+  login:
+    'kavach:security:login',
+
+  getSecuritySession:
+    'kavach:security:get-session',
+
+  logout:
+    'kavach:security:logout',
+
+  getSecurityAudit:
+    'kavach:security:get-audit',
+
+  recordSecurityAuditEvent:
+    'kavach:security:record-audit-event',
 } as const;
 
 const ALLOWED_GRAPH_RELATIONSHIPS =
@@ -424,6 +449,67 @@ function registerIpcHandlers(): void {
   ipcMain.handle(
     IPC_CHANNELS.getApiHealth,
     requestApiHealth,
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS
+      .getSecurityStatus,
+
+    () =>
+      fetchAuthStatus(),
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.login,
+
+    (
+      _event,
+      request: unknown,
+    ) =>
+      loginOperator(
+        request,
+      ),
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS
+      .getSecuritySession,
+
+    () =>
+      fetchCurrentAuthSession(),
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.logout,
+
+    () =>
+      logoutOperator(),
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS
+      .getSecurityAudit,
+
+    (
+      _event,
+      query: unknown,
+    ) =>
+      fetchSecurityAuditLog(
+        query,
+      ),
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS
+      .recordSecurityAuditEvent,
+
+    (
+      _event,
+      request: unknown,
+    ) =>
+      recordSecurityAuditEvent(
+        request,
+      ),
   );
 }
 

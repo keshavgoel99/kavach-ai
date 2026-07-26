@@ -39,6 +39,24 @@ const IPC_CHANNELS = {
 
   exportReport:
     'kavach:reports:export',
+
+  getSecurityStatus:
+    'kavach:security:get-status',
+
+  login:
+    'kavach:security:login',
+
+  getSecuritySession:
+    'kavach:security:get-session',
+
+  logout:
+    'kavach:security:logout',
+
+  getSecurityAudit:
+    'kavach:security:get-audit',
+
+  recordSecurityAuditEvent:
+    'kavach:security:record-audit-event',
 } as const;
 
 const kavachDesktopApi: KavachDesktopApi = {
@@ -192,6 +210,51 @@ const kavachDesktopApi: KavachDesktopApi = {
         IPC_CHANNELS
           .exportReport,
 
+        request,
+      ),
+  },
+
+  security: {
+    getStatus: () =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS
+          .getSecurityStatus,
+      ),
+
+    login: (
+      request,
+    ) =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS.login,
+        request,
+      ),
+
+    getSession: () =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS
+          .getSecuritySession,
+      ),
+
+    logout: () =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS.logout,
+      ),
+
+    getAuditLog: (
+      query,
+    ) =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS
+          .getSecurityAudit,
+        query,
+      ),
+
+    recordAuditEvent: (
+      request,
+    ) =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS
+          .recordSecurityAuditEvent,
         request,
       ),
   },

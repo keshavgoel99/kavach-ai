@@ -116,4 +116,18 @@ export type {
   ReportTextSection,
 } from './report';
 
-
+export type {
+  AuthLoginRequest,
+  AuthLoginResponse,
+  AuthSession,
+  AuthStatusResponse,
+  ClientAuditEventRequest,
+  OperatorRole,
+  OperatorSummary,
+  SecurityAuditEntry,
+  SecurityAuditEventType,
+  SecurityAuditOutcome,
+  SecurityAuditQuery,
+  SecurityAuditResponse,
+  SecurityPermission,
+} from './security';

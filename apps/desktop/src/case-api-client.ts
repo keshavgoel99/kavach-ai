@@ -1,5 +1,9 @@
 import type {
   ApiErrorResponse,
+  AuthLoginRequest,
+  AuthLoginResponse,
+  AuthSession,
+  AuthStatusResponse,
   CaseDashboardSummary,
   CaseDetail,
   CaseFilterOptions,
@@ -8,6 +12,7 @@ import type {
   CasePriorityBand,
   CasePriorityQueueQuery,
   CasePriorityQueueResponse,
+  ClientAuditEventRequest,
   EntityProfileDetail,
   HotspotFilterOptions,
   HotspotLocationTrendResponse,
@@ -18,6 +23,8 @@ import type {
   AnalyticsOverviewResponse,
   AnalyticsQuery,
   HotspotTrendQuery,
+  SecurityAuditQuery,
+  SecurityAuditResponse,
   SimilarCasesQuery,
   SimilarCasesResponse,
 } from '@kavach/shared-types';
@@ -28,6 +35,16 @@ import type {
 
 const API_BASE_URL =
   'http://127.0.0.1:4000/api/v1';
+
+let apiAccessToken:
+  string | null = null;
+
+let cachedAuthSession:
+  AuthSession | null = null;
+
+export function getCachedAuthSession(): AuthSession | null {
+  return cachedAuthSession;
+}
 
 function isRecord(
   value: unknown,
@@ -226,14 +243,31 @@ function getApiErrorMessage(
 
 export async function requestJson<ResponseBody>(
   path: string,
+  init:
+    RequestInit = {},
 ): Promise<ResponseBody> {
+  const headers =
+    new Headers(
+      init.headers,
+    );
+
+  headers.set(
+    'accept',
+    'application/json',
+  );
+
+  if (apiAccessToken) {
+    headers.set(
+      'authorization',
+      `Bearer ${apiAccessToken}`,
+    );
+  }
+
   const response = await fetch(
     `${API_BASE_URL}${path}`,
     {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-      },
+      ...init,
+      headers,
     },
   );
 
@@ -1131,3 +1165,230 @@ export async function fetchAnalyticsOverview(
   );
 }
 
+export async function fetchAuthStatus(): Promise<AuthStatusResponse> {
+  return requestJson<
+    AuthStatusResponse
+  >(
+    '/auth/status',
+  );
+}
+
+export async function loginOperator(
+  suppliedRequest:
+    unknown,
+): Promise<AuthSession> {
+  if (
+    !isRecord(
+      suppliedRequest,
+    ) ||
+    typeof suppliedRequest
+      .username !==
+      'string' ||
+    typeof suppliedRequest
+      .password !==
+      'string'
+  ) {
+    throw new Error(
+      'Username and password are required.',
+    );
+  }
+
+  const request:
+    AuthLoginRequest = {
+    username:
+      suppliedRequest
+        .username
+        .trim(),
+
+    password:
+      suppliedRequest.password,
+  };
+
+  const response =
+    await requestJson<
+      AuthLoginResponse
+    >(
+      '/auth/login',
+
+      {
+        method: 'POST',
+
+        headers: {
+          'content-type':
+            'application/json',
+        },
+
+        body:
+          JSON.stringify(
+            request,
+          ),
+      },
+    );
+
+  apiAccessToken =
+    response.accessToken;
+
+  cachedAuthSession =
+    response.session;
+
+  return response.session;
+}
+
+export async function fetchCurrentAuthSession(): Promise<AuthSession | null> {
+  if (!apiAccessToken) {
+    cachedAuthSession =
+      null;
+
+    return null;
+  }
+
+  try {
+    const session =
+      await requestJson<
+        AuthSession
+      >(
+        '/auth/session',
+      );
+
+    cachedAuthSession =
+      session;
+
+    return session;
+  } catch (
+    error: unknown
+  ) {
+    apiAccessToken =
+      null;
+
+    cachedAuthSession =
+      null;
+
+    return null;
+  }
+}
+
+export async function logoutOperator(): Promise<void> {
+  try {
+    if (apiAccessToken) {
+      await requestJson<void>(
+        '/auth/logout',
+
+        {
+          method: 'POST',
+        },
+      );
+    }
+  } finally {
+    apiAccessToken =
+      null;
+
+    cachedAuthSession =
+      null;
+  }
+}
+
+export async function fetchSecurityAuditLog(
+  suppliedQuery:
+    unknown = {},
+): Promise<SecurityAuditResponse> {
+  if (
+    suppliedQuery !==
+      undefined &&
+    !isRecord(
+      suppliedQuery,
+    )
+  ) {
+    throw new Error(
+      'An audit query object is required.',
+    );
+  }
+
+  const query =
+    suppliedQuery as
+      SecurityAuditQuery;
+
+  const parameters =
+    new URLSearchParams();
+
+  if (
+    query.limit !==
+      undefined
+  ) {
+    if (
+      !Number.isSafeInteger(
+        query.limit,
+      ) ||
+      query.limit < 1 ||
+      query.limit > 500
+    ) {
+      throw new Error(
+        'Audit limit must be between 1 and 500.',
+      );
+    }
+
+    parameters.set(
+      'limit',
+      String(query.limit),
+    );
+  }
+
+  if (
+    query.eventTypes &&
+    query.eventTypes.length >
+      0
+  ) {
+    parameters.set(
+      'eventTypes',
+
+      query.eventTypes.join(
+        ',',
+      ),
+    );
+  }
+
+  const queryString =
+    parameters.toString();
+
+  return requestJson<
+    SecurityAuditResponse
+  >(
+    queryString
+      ? `/security/audit?${queryString}`
+      : '/security/audit',
+  );
+}
+
+export async function recordSecurityAuditEvent(
+  suppliedRequest:
+    unknown,
+): Promise<void> {
+  if (
+    !isRecord(
+      suppliedRequest,
+    )
+  ) {
+    throw new Error(
+      'An audit event is required.',
+    );
+  }
+
+  await requestJson<void>(
+    '/security/audit/events',
+
+    {
+      method: 'POST',
+
+      headers: {
+        'content-type':
+          'application/json',
+      },
+
+      body:
+        JSON.stringify(
+          suppliedRequest as
+            unknown as
+            ClientAuditEventRequest,
+        ),
+    },
+  );
+}

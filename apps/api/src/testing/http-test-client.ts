@@ -17,17 +17,35 @@ export async function requestJson<
   route: string,
 
   expectedStatus = 200,
+
+  init:
+    RequestInit = {},
 ): Promise<
   TestHttpResponse<Body>
 > {
+  const headers =
+    new Headers(
+      init.headers,
+    );
+
+  if (
+    !headers.has(
+      'accept',
+    )
+  ) {
+    headers.set(
+      'accept',
+      'application/json',
+    );
+  }
+
   const response =
     await fetch(
       `${baseUrl}${route}`,
       {
-        headers: {
-          accept:
-            'application/json',
-        },
+        ...init,
+
+        headers,
       },
     );
 

@@ -6,6 +6,19 @@ import type {
 } from '@kavach/shared-types';
 
 import {
+  authenticateRequest,
+  auditAuthenticatedRequest,
+  maskSensitiveResponse,
+  requirePermission,
+} from './security/security-middleware';
+
+import {
+  createAuthRouter,
+  createProtectedAuthRouter,
+  createSecurityRouter,
+} from './security/security-routes';
+
+import {
   createCaseRouter,
 } from './cases/case-routes';
 
@@ -58,6 +71,78 @@ app.get(
 
     response.status(200).json(health);
   },
+);
+
+app.use(
+  '/api/v1/auth',
+  createAuthRouter(),
+);
+
+app.use(
+  '/api/v1',
+  authenticateRequest,
+);
+
+app.use(
+  '/api/v1',
+  auditAuthenticatedRequest,
+);
+
+app.use(
+  '/api/v1',
+  maskSensitiveResponse,
+);
+
+app.use(
+  '/api/v1/auth',
+  createProtectedAuthRouter(),
+);
+
+app.use(
+  '/api/v1/security',
+  createSecurityRouter(),
+);
+
+app.use(
+  '/api/v1/cases',
+  requirePermission(
+    'VIEW_CASES',
+  ),
+);
+
+app.use(
+  '/api/v1/entities',
+  requirePermission(
+    'VIEW_ENTITIES',
+  ),
+);
+
+app.use(
+  '/api/v1/graph',
+  requirePermission(
+    'VIEW_GRAPH',
+  ),
+);
+
+app.use(
+  '/api/v1/priority-queue',
+  requirePermission(
+    'VIEW_PRIORITY',
+  ),
+);
+
+app.use(
+  '/api/v1/hotspots',
+  requirePermission(
+    'VIEW_HOTSPOTS',
+  ),
+);
+
+app.use(
+  '/api/v1/analytics',
+  requirePermission(
+    'VIEW_ANALYTICS',
+  ),
 );
 
 app.use(

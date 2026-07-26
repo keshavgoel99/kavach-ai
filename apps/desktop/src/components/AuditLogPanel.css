@@ -1,0 +1,139 @@
+.audit-log {
+  overflow: hidden;
+  border:
+    1px solid rgba(126, 150, 172, 0.2);
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(20, 30, 43, 0.99),
+      rgba(9, 16, 25, 0.99)
+    );
+}
+
+.audit-log > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px;
+  border-bottom:
+    1px solid rgba(126, 150, 172, 0.13);
+}
+
+.audit-log > header > div > span {
+  color: #75dfc4;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.15em;
+}
+
+.audit-log h2 {
+  margin: 6px 0;
+  color: #f2f6f9;
+  font-size: 24px;
+}
+
+.audit-log p {
+  margin: 0;
+  color:
+    rgba(222, 231, 240, 0.54);
+  font-size: 10px;
+}
+
+.audit-log label {
+  display: grid;
+  min-width: 180px;
+  gap: 6px;
+}
+
+.audit-log label span {
+  color:
+    rgba(222, 231, 240, 0.42);
+  font-size: 7px;
+}
+
+.audit-log select {
+  padding: 9px;
+  border:
+    1px solid rgba(126, 150, 172, 0.2);
+  border-radius: 8px;
+  background:
+    rgba(5, 10, 16, 0.78);
+  color: #edf3f8;
+  font: inherit;
+  font-size: 8px;
+}
+
+.audit-log__table {
+  overflow: auto;
+}
+
+.audit-log table {
+  width: 100%;
+  min-width: 950px;
+  border-collapse: collapse;
+}
+
+.audit-log th,
+.audit-log td {
+  padding: 10px;
+  border-bottom:
+    1px solid rgba(126, 150, 172, 0.09);
+  text-align: left;
+  vertical-align: top;
+}
+
+.audit-log th {
+  color:
+    rgba(117, 223, 196, 0.72);
+  background:
+    rgba(4, 9, 15, 0.35);
+  font-size: 7px;
+  letter-spacing: 0.07em;
+}
+
+.audit-log td {
+  color:
+    rgba(222, 231, 240, 0.58);
+  font-size: 8px;
+}
+
+.audit-outcome {
+  padding: 4px 6px;
+  border-radius: 999px;
+  font-size: 6px;
+  font-weight: 800;
+}
+
+.audit-outcome--success {
+  color: #92ead5;
+  background:
+    rgba(117, 223, 196, 0.08);
+}
+
+.audit-outcome--failure {
+  color: #f6cf84;
+  background:
+    rgba(245, 191, 91, 0.08);
+}
+
+.audit-outcome--denied {
+  color: #ffaaaa;
+  background:
+    rgba(255, 88, 88, 0.08);
+}
+
+.audit-log__message,
+.audit-log__error,
+.audit-log__empty {
+  padding: 30px;
+  color:
+    rgba(222, 231, 240, 0.46);
+  font-size: 9px;
+  text-align: center;
+}
+
+.audit-log__error {
+  color: #ffaaaa;
+}

@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 
 import {
+  randomUUID,
+} from 'node:crypto';
+
+import {
   after,
   before,
   describe,
@@ -15,9 +19,17 @@ import {
   startApiTestServer,
 } from './api-test-server';
 
+import type {
+  TestHttpResponse,
+} from './http-test-client';
+
 import {
   requestJson,
 } from './http-test-client';
+
+import {
+  createOperatorAccount,
+} from '../security/security-service';
 
 type UnknownRecord =
   Record<
@@ -27,6 +39,10 @@ type UnknownRecord =
 
 let testServer:
   ApiTestServer;
+
+let accessToken:
+  string | null =
+  null;
 
 function isRecord(
   value: unknown,
@@ -195,6 +211,107 @@ function assertDescendingScores(
   }
 }
 
+async function createAuthenticatedTestOperator():
+Promise<string> {
+  const username =
+    [
+      'it',
+      randomUUID()
+        .replaceAll(
+          '-',
+          '',
+        )
+        .slice(
+          0,
+          24,
+        ),
+    ].join('_');
+
+  const password =
+    [
+      'KavachIntegration',
+      randomUUID(),
+      'Password2026!',
+    ].join('_');
+
+  await createOperatorAccount(
+    username,
+    'Integration Test Operator',
+    'ADMIN',
+    password,
+  );
+
+  const loginResponse =
+    await requestJson<unknown>(
+      testServer.baseUrl,
+      '/auth/login',
+      200,
+      {
+        method:
+          'POST',
+
+        headers: {
+          'content-type':
+            'application/json',
+        },
+
+        body:
+          JSON.stringify({
+            username,
+            password,
+          }),
+      },
+    );
+
+  assertRecord(
+    loginResponse.body,
+    'Login response',
+  );
+
+  const token =
+    readString(
+      loginResponse.body,
+      'accessToken',
+    );
+
+  assert.ok(
+    token.length > 0,
+    'Login response must include an access token.',
+  );
+
+  return token;
+}
+
+async function requestProtectedJson<
+  Body,
+>(
+  route: string,
+
+  expectedStatus = 200,
+): Promise<
+  TestHttpResponse<Body>
+> {
+  const token =
+    accessToken;
+
+  assert.ok(
+    token,
+    'Protected API requests require a test access token.',
+  );
+
+  return requestJson<Body>(
+    testServer.baseUrl,
+    route,
+    expectedStatus,
+    {
+      headers: {
+        Authorization:
+          `Bearer ${token}`,
+      },
+    },
+  );
+}
+
 describe(
   'KAVACH API dataset integration',
   {
@@ -206,6 +323,9 @@ describe(
       async () => {
         testServer =
           await startApiTestServer();
+
+        accessToken =
+          await createAuthenticatedTestOperator();
       },
     );
 
@@ -237,12 +357,37 @@ describe(
     );
 
     it(
-      'loads a page of FIR records',
+      'reports public auth status',
       async () => {
         const response =
           await requestJson<unknown>(
             testServer.baseUrl,
+            '/auth/status',
+          );
 
+        assert.equal(
+          response.status,
+          200,
+        );
+
+        assertRecord(
+          response.body,
+          'Auth status response',
+        );
+
+        assert.equal(
+          typeof response.body
+            .configured,
+          'boolean',
+        );
+      },
+    );
+
+    it(
+      'loads a page of FIR records',
+      async () => {
+        const response =
+          await requestProtectedJson<unknown>(
             '/cases?page=1&pageSize=5',
           );
 
@@ -288,8 +433,7 @@ describe(
       'loads complete FIR details',
       async () => {
         const response =
-          await requestJson<unknown>(
-            testServer.baseUrl,
+          await requestProtectedJson<unknown>(
             '/cases/1',
           );
 
@@ -328,14 +472,12 @@ describe(
       'returns a bounded explainable priority assessment',
       async () => {
         const first =
-          await requestJson<unknown>(
-            testServer.baseUrl,
+          await requestProtectedJson<unknown>(
             '/cases/1/priority',
           );
 
         const second =
-          await requestJson<unknown>(
-            testServer.baseUrl,
+          await requestProtectedJson<unknown>(
             '/cases/1/priority',
           );
 
@@ -413,9 +555,7 @@ describe(
       'returns a sorted priority queue',
       async () => {
         const response =
-          await requestJson<unknown>(
-            testServer.baseUrl,
-
+          await requestProtectedJson<unknown>(
             '/priority-queue?page=1&pageSize=25',
           );
 
@@ -493,14 +633,12 @@ describe(
           ].join('');
 
         const first =
-          await requestJson<unknown>(
-            testServer.baseUrl,
+          await requestProtectedJson<unknown>(
             route,
           );
 
         const second =
-          await requestJson<unknown>(
-            testServer.baseUrl,
+          await requestProtectedJson<unknown>(
             route,
           );
 
@@ -584,9 +722,7 @@ describe(
       'returns all hotspot periods and locations',
       async () => {
         const optionsResponse =
-          await requestJson<unknown>(
-            testServer.baseUrl,
-
+          await requestProtectedJson<unknown>(
             '/hotspots/filter-options',
           );
 
@@ -604,9 +740,7 @@ describe(
         );
 
         const summaryResponse =
-          await requestJson<unknown>(
-            testServer.baseUrl,
-
+          await requestProtectedJson<unknown>(
             '/hotspots/summary?limit=180',
           );
 
@@ -663,9 +797,7 @@ describe(
       'returns a twelve-month hotspot trend',
       async () => {
         const summaryResponse =
-          await requestJson<unknown>(
-            testServer.baseUrl,
-
+          await requestProtectedJson<unknown>(
             '/hotspots/summary?limit=1',
           );
 
@@ -701,9 +833,7 @@ describe(
           );
 
         const trendResponse =
-          await requestJson<unknown>(
-            testServer.baseUrl,
-
+          await requestProtectedJson<unknown>(
             [
               '/hotspots/locations/',
               locationId,
@@ -730,9 +860,7 @@ describe(
       'returns dataset-wide analytics totals',
       async () => {
         const response =
-          await requestJson<unknown>(
-            testServer.baseUrl,
-
+          await requestProtectedJson<unknown>(
             '/analytics/overview',
           );
 
@@ -844,9 +972,7 @@ describe(
       'returns an investigation graph neighborhood',
       async () => {
         const response =
-          await requestJson<unknown>(
-            testServer.baseUrl,
-
+          await requestProtectedJson<unknown>(
             [
               '/graph/neighborhood',
               '?rootNodeId=CASE%3A1',
@@ -907,9 +1033,7 @@ describe(
       'rejects invalid request parameters',
       async () => {
         const invalidSimilar =
-          await requestJson<unknown>(
-            testServer.baseUrl,
-
+          await requestProtectedJson<unknown>(
             '/cases/1/similar?limit=51',
 
             400,
@@ -923,9 +1047,7 @@ describe(
         );
 
         const invalidHotspot =
-          await requestJson<unknown>(
-            testServer.baseUrl,
-
+          await requestProtectedJson<unknown>(
             '/hotspots/summary?month=13',
 
             400,
@@ -939,9 +1061,7 @@ describe(
         );
 
         const invalidAnalytics =
-          await requestJson<unknown>(
-            testServer.baseUrl,
-
+          await requestProtectedJson<unknown>(
             [
               '/analytics/overview',
               '?registeredFrom=2026-01-01',
@@ -964,9 +1084,7 @@ describe(
       'returns not-found errors for missing resources',
       async () => {
         const missingCase =
-          await requestJson<unknown>(
-            testServer.baseUrl,
-
+          await requestProtectedJson<unknown>(
             '/cases/999999',
 
             404,
@@ -984,9 +1102,7 @@ describe(
         );
 
         const missingSimilarity =
-          await requestJson<unknown>(
-            testServer.baseUrl,
-
+          await requestProtectedJson<unknown>(
             '/cases/999999/similar',
 
             404,

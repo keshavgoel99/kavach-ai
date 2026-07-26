@@ -40,13 +40,23 @@ import {
   SystemPanel,
 } from './components/SystemPanel';
 
+import {
+  SecurityGate,
+  useSecuritySession,
+} from './components/SecurityGate';
+
+import {
+  AuditLogPanel,
+} from './components/AuditLogPanel';
+
 type AppView =
   | 'dashboard'
   | 'records'
   | 'priority'
   | 'hotspots'
   | 'analytics'
-  | 'reports';
+  | 'reports'
+  | 'security';
 
 interface ViewMetadata {
   eyebrow: string;
@@ -123,6 +133,17 @@ Readonly<
     description:
       'Generate reviewable FIR, analytics and hotspot documents in PDF, HTML, JSON and CSV formats.',
   },
+
+  security: {
+    eyebrow:
+      'Security and Accountability',
+
+    title:
+      'Audit Log',
+
+    description:
+      'Review authentication, authorization, resource access and controlled-export activity.',
+  },
 };
 
 function StatusCard({
@@ -174,7 +195,12 @@ function App() {
       'dashboard',
     );
 
-    const metadata =
+  const {
+    hasPermission,
+  } =
+    useSecuritySession();
+
+  const metadata =
     VIEW_METADATA[activeView];
 
   return (
@@ -213,80 +239,119 @@ function App() {
             Dashboard
           </button>
 
-          <button
-            className={navigationClass(
-              activeView ===
-                'records',
-            )}
-            type="button"
-            onClick={() =>
-              setActiveView(
-                'records',
-              )
-            }
-          >
-            Crime Records
-          </button>
+          {hasPermission(
+            'VIEW_CASES',
+          ) && (
+            <button
+              className={navigationClass(
+                activeView ===
+                  'records',
+              )}
+              type="button"
+              onClick={() =>
+                setActiveView(
+                  'records',
+                )
+              }
+            >
+              Crime Records
+            </button>
+          )}
 
-          <button
-            className={navigationClass(
-              activeView ===
-                'priority',
-            )}
-            type="button"
-            onClick={() =>
-              setActiveView(
-                'priority',
-              )
-            }
-          >
-            Priority Queue
-          </button>
+          {hasPermission(
+            'VIEW_PRIORITY',
+          ) && (
+            <button
+              className={navigationClass(
+                activeView ===
+                  'priority',
+              )}
+              type="button"
+              onClick={() =>
+                setActiveView(
+                  'priority',
+                )
+              }
+            >
+              Priority Queue
+            </button>
+          )}
 
-          <button
-            className={navigationClass(
-              activeView ===
-                'hotspots',
-            )}
-            type="button"
-            onClick={() =>
-              setActiveView(
-                'hotspots',
-              )
-            }
-          >
-            Hotspots
-          </button>
+          {hasPermission(
+            'VIEW_HOTSPOTS',
+          ) && (
+            <button
+              className={navigationClass(
+                activeView ===
+                  'hotspots',
+              )}
+              type="button"
+              onClick={() =>
+                setActiveView(
+                  'hotspots',
+                )
+              }
+            >
+              Hotspots
+            </button>
+          )}
 
-          <button
-            className={navigationClass(
-              activeView ===
-                'analytics',
-            )}
-            type="button"
-            onClick={() =>
-              setActiveView(
-                'analytics',
-              )
-            }
-          >
-            Analytics
-          </button>
+          {hasPermission(
+            'VIEW_ANALYTICS',
+          ) && (
+            <button
+              className={navigationClass(
+                activeView ===
+                  'analytics',
+              )}
+              type="button"
+              onClick={() =>
+                setActiveView(
+                  'analytics',
+                )
+              }
+            >
+              Analytics
+            </button>
+          )}
 
-          <button
-            className={navigationClass(
-              activeView ===
-                'reports',
-            )}
-            type="button"
-            onClick={() =>
-              setActiveView(
-                'reports',
-              )
-            }
-          >
-            Reports
-          </button>
+          {hasPermission(
+            'EXPORT_REPORTS',
+          ) && (
+            <button
+              className={navigationClass(
+                activeView ===
+                  'reports',
+              )}
+              type="button"
+              onClick={() =>
+                setActiveView(
+                  'reports',
+                )
+              }
+            >
+              Reports
+            </button>
+          )}
+
+          {hasPermission(
+            'VIEW_AUDIT_LOGS',
+          ) && (
+            <button
+              className={navigationClass(
+                activeView ===
+                  'security',
+              )}
+              type="button"
+              onClick={() =>
+                setActiveView(
+                  'security',
+                )
+              }
+            >
+              Audit Log
+            </button>
+          )}
         </nav>
 
         <div className="sidebar__footer">
@@ -432,6 +497,13 @@ function App() {
             <ReportsWorkspace />
           </div>
         )}
+
+        {activeView ===
+          'security' && (
+          <div className="page-view">
+            <AuditLogPanel />
+          </div>
+        )}
       </main>
     </div>
   );
@@ -452,7 +524,9 @@ createRoot(
   rootElement,
 ).render(
   <React.StrictMode>
-    <App />
+    <SecurityGate>
+      <App />
+    </SecurityGate>
   </React.StrictMode>,
 );
 
