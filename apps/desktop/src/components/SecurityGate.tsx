@@ -88,6 +88,14 @@ export function SecurityGate({
     );
 
   const [
+    sessionMessage,
+    setSessionMessage,
+  ] =
+    useState<string | null>(
+      null,
+    );
+
+  const [
     loggingIn,
     setLoggingIn,
   ] =
@@ -144,6 +152,93 @@ export function SecurityGate({
     };
   }, []);
 
+  useEffect(() => {
+    const unsubscribe =
+      window.kavach.security
+        .onSessionExpired(
+          () => {
+            setSession(null);
+
+            setPassword('');
+
+            setSessionMessage(
+              [
+                'Your secure session expired',
+                'or is no longer valid.',
+                'Sign in again to continue.',
+              ].join(' '),
+            );
+          },
+        );
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    if (!session) {
+      return undefined;
+    }
+
+    let active = true;
+
+    const validateSession =
+      async (): Promise<void> => {
+        try {
+          const currentSession =
+            await window.kavach
+              .security
+              .getSession();
+
+          if (!active) {
+            return;
+          }
+
+          if (!currentSession) {
+            setSession(null);
+
+            setSessionMessage(
+              [
+                'Your secure session expired.',
+                'Sign in again to continue.',
+              ].join(' '),
+            );
+
+            return;
+          }
+
+          setSession(
+            currentSession,
+          );
+        } catch {
+          if (active) {
+            setSession(null);
+
+            setSessionMessage(
+              'Your secure session could not be validated.',
+            );
+          }
+        }
+      };
+
+    const interval =
+      window.setInterval(
+        () => {
+          void validateSession();
+        },
+        60_000,
+      );
+
+    return () => {
+      active = false;
+
+      window.clearInterval(
+        interval,
+      );
+    };
+  }, [
+    session?.sessionId,
+  ]);
+
   async function handleLogin(
     event:
       React.FormEvent,
@@ -165,6 +260,9 @@ export function SecurityGate({
           });
 
       setSession(result);
+
+      setSessionMessage(null);
+      setPassword('');
 
       setPhase(
         'authenticated',
@@ -316,6 +414,12 @@ export function SecurityGate({
                 }
               />
             </label>
+
+            {sessionMessage && (
+              <div className="security-login__notice">
+                {sessionMessage}
+              </div>
+            )}
 
             {loginError && (
               <div className="security-gate__error">

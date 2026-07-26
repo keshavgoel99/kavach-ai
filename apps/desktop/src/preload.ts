@@ -57,6 +57,9 @@ const IPC_CHANNELS = {
 
   recordSecurityAuditEvent:
     'kavach:security:record-audit-event',
+
+  sessionExpired:
+    'kavach:security:session-expired',
 } as const;
 
 const kavachDesktopApi: KavachDesktopApi = {
@@ -257,6 +260,28 @@ const kavachDesktopApi: KavachDesktopApi = {
           .recordSecurityAuditEvent,
         request,
       ),
+
+    onSessionExpired: (
+      listener: () => void,
+    ) => {
+      const handler = (): void => {
+        listener();
+      };
+
+      ipcRenderer.on(
+        IPC_CHANNELS
+          .sessionExpired,
+        handler,
+      );
+
+      return () => {
+        ipcRenderer.removeListener(
+          IPC_CHANNELS
+            .sessionExpired,
+          handler,
+        );
+      };
+    },
   },
 };
 

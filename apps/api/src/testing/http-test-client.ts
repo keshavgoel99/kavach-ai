@@ -9,6 +9,23 @@ export interface TestHttpResponse<
     Headers;
 }
 
+export interface TestHttpRequestOptions
+  extends RequestInit {
+  omitDefaultAuthorization?:
+    boolean;
+}
+
+let defaultAccessToken:
+  string | null = null;
+
+export function setDefaultTestAccessToken(
+  accessToken:
+    string | null,
+): void {
+  defaultAccessToken =
+    accessToken;
+}
+
 export async function requestJson<
   Body,
 >(
@@ -18,24 +35,39 @@ export async function requestJson<
 
   expectedStatus = 200,
 
-  init:
-    RequestInit = {},
+  suppliedOptions:
+    TestHttpRequestOptions = {},
 ): Promise<
   TestHttpResponse<Body>
 > {
+  const {
+    omitDefaultAuthorization =
+      false,
+
+    ...requestOptions
+  } =
+    suppliedOptions;
+
   const headers =
     new Headers(
-      init.headers,
+      requestOptions.headers,
     );
 
+  headers.set(
+    'accept',
+    'application/json',
+  );
+
   if (
+    defaultAccessToken &&
+    !omitDefaultAuthorization &&
     !headers.has(
-      'accept',
+      'authorization',
     )
   ) {
     headers.set(
-      'accept',
-      'application/json',
+      'authorization',
+      `Bearer ${defaultAccessToken}`,
     );
   }
 
@@ -43,8 +75,7 @@ export async function requestJson<
     await fetch(
       `${baseUrl}${route}`,
       {
-        ...init,
-
+        ...requestOptions,
         headers,
       },
     );

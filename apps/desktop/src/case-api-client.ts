@@ -42,6 +42,35 @@ let apiAccessToken:
 let cachedAuthSession:
   AuthSession | null = null;
 
+type AuthenticationInvalidatedListener =
+  () => void;
+
+let authenticationInvalidatedListener:
+  AuthenticationInvalidatedListener |
+  null = null;
+
+export function setAuthenticationInvalidatedListener(
+  listener:
+    AuthenticationInvalidatedListener |
+    null,
+): void {
+  authenticationInvalidatedListener =
+    listener;
+}
+
+function invalidateAuthentication(): void {
+  const hadAuthentication =
+    apiAccessToken !== null ||
+    cachedAuthSession !== null;
+
+  apiAccessToken = null;
+  cachedAuthSession = null;
+
+  if (hadAuthentication) {
+    authenticationInvalidatedListener?.();
+  }
+}
+
 export function getCachedAuthSession(): AuthSession | null {
   return cachedAuthSession;
 }
@@ -270,6 +299,14 @@ export async function requestJson<ResponseBody>(
       headers,
     },
   );
+
+  if (
+    response.status === 401 &&
+    path !== '/auth/login' &&
+    path !== '/auth/status'
+  ) {
+    invalidateAuthentication();
+  }
 
   let payload: unknown;
 
@@ -1254,14 +1291,8 @@ export async function fetchCurrentAuthSession(): Promise<AuthSession | null> {
       session;
 
     return session;
-  } catch (
-    error: unknown
-  ) {
-    apiAccessToken =
-      null;
-
-    cachedAuthSession =
-      null;
+  } catch {
+    invalidateAuthentication();
 
     return null;
   }
@@ -1279,11 +1310,7 @@ export async function logoutOperator(): Promise<void> {
       );
     }
   } finally {
-    apiAccessToken =
-      null;
-
-    cachedAuthSession =
-      null;
+    invalidateAuthentication();
   }
 }
 

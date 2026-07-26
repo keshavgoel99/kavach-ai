@@ -13,6 +13,10 @@ import {
 } from './security/security-middleware';
 
 import {
+  applyApiSecurityHeaders,
+} from './security/api-security-middleware';
+
+import {
   createAuthRouter,
   createProtectedAuthRouter,
   createSecurityRouter,
@@ -48,11 +52,25 @@ import {
 
 const app = express();
 
-app.disable('x-powered-by');
+app.disable(
+  'x-powered-by',
+);
+
+app.set(
+  'trust proxy',
+  false,
+);
+
+app.use(
+  applyApiSecurityHeaders,
+);
 
 app.use(
   express.json({
-    limit: '1mb',
+    limit: '128kb',
+    strict: true,
+    type:
+      'application/json',
   }),
 );
 
@@ -178,6 +196,38 @@ app.use(
 app.use(
   '/api/v1/analytics',
   createAnalyticsRouter(),
+);
+
+app.use(
+  (
+    error: unknown,
+    _request:
+      express.Request,
+    response:
+      express.Response,
+    next:
+      express.NextFunction,
+  ) => {
+    if (
+      error instanceof
+        SyntaxError &&
+      'body' in error
+    ) {
+      response.status(400).json({
+        error: {
+          code:
+            'INVALID_JSON',
+
+          message:
+            'The request body contains invalid JSON.',
+        },
+      });
+
+      return;
+    }
+
+    next(error);
+  },
 );
 
 app.use((request, response) => {

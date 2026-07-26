@@ -282,6 +282,46 @@ async function main(): Promise<void> {
   );
 
   assert.match(
+    mainProcessSource,
+
+    /webSecurity\s*:\s*true/,
+
+    'Electron web security must remain enabled.',
+  );
+
+  assert.match(
+    mainProcessSource,
+
+    /allowRunningInsecureContent\s*:\s*false/,
+
+    'Electron must block insecure active content.',
+  );
+
+  assert.match(
+    mainProcessSource,
+
+    /setWindowOpenHandler/,
+
+    'Electron must block uncontrolled popup windows.',
+  );
+
+  assert.match(
+    mainProcessSource,
+
+    /will-navigate/,
+
+    'Electron must control renderer navigation.',
+  );
+
+  assert.match(
+    mainProcessSource,
+
+    /Content-Security-Policy/,
+
+    'Electron must configure a Content Security Policy.',
+  );
+
+  assert.match(
     preloadSource,
 
     /contextBridge\s*\.\s*exposeInMainWorld/,
@@ -381,6 +421,22 @@ async function main(): Promise<void> {
 
   console.log(
     'sandbox: enabled',
+  );
+
+  console.log(
+    'webSecurity: enabled',
+  );
+
+  console.log(
+    'External navigation: blocked',
+  );
+
+  console.log(
+    'Popup windows: blocked',
+  );
+
+  console.log(
+    'Content Security Policy: configured',
   );
 
   console.log(

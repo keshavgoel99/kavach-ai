@@ -31,4 +31,8 @@ export interface SecurityDesktopApi {
     request:
       ClientAuditEventRequest,
   ): Promise<void>;
+
+  onSessionExpired(
+    listener: () => void,
+  ): () => void;
 }

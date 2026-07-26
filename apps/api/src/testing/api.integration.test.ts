@@ -5,6 +5,14 @@ import {
 } from 'node:crypto';
 
 import {
+  mkdtemp,
+  rm,
+} from 'node:fs/promises';
+
+import os from 'node:os';
+import path from 'node:path';
+
+import {
   after,
   before,
   describe,
@@ -15,16 +23,13 @@ import type {
   ApiTestServer,
 } from './api-test-server';
 
-import {
-  startApiTestServer,
-} from './api-test-server';
-
 import type {
   TestHttpResponse,
 } from './http-test-client';
 
 import {
   requestJson,
+  setDefaultTestAccessToken,
 } from './http-test-client';
 
 import {
@@ -40,9 +45,11 @@ type UnknownRecord =
 let testServer:
   ApiTestServer;
 
-let accessToken:
-  string | null =
-  null;
+let temporarySecurityDirectory:
+  string;
+
+let analystAccessToken:
+  string;
 
 function isRecord(
   value: unknown,
@@ -211,107 +218,6 @@ function assertDescendingScores(
   }
 }
 
-async function createAuthenticatedTestOperator():
-Promise<string> {
-  const username =
-    [
-      'it',
-      randomUUID()
-        .replaceAll(
-          '-',
-          '',
-        )
-        .slice(
-          0,
-          24,
-        ),
-    ].join('_');
-
-  const password =
-    [
-      'KavachIntegration',
-      randomUUID(),
-      'Password2026!',
-    ].join('_');
-
-  await createOperatorAccount(
-    username,
-    'Integration Test Operator',
-    'ADMIN',
-    password,
-  );
-
-  const loginResponse =
-    await requestJson<unknown>(
-      testServer.baseUrl,
-      '/auth/login',
-      200,
-      {
-        method:
-          'POST',
-
-        headers: {
-          'content-type':
-            'application/json',
-        },
-
-        body:
-          JSON.stringify({
-            username,
-            password,
-          }),
-      },
-    );
-
-  assertRecord(
-    loginResponse.body,
-    'Login response',
-  );
-
-  const token =
-    readString(
-      loginResponse.body,
-      'accessToken',
-    );
-
-  assert.ok(
-    token.length > 0,
-    'Login response must include an access token.',
-  );
-
-  return token;
-}
-
-async function requestProtectedJson<
-  Body,
->(
-  route: string,
-
-  expectedStatus = 200,
-): Promise<
-  TestHttpResponse<Body>
-> {
-  const token =
-    accessToken;
-
-  assert.ok(
-    token,
-    'Protected API requests require a test access token.',
-  );
-
-  return requestJson<Body>(
-    testServer.baseUrl,
-    route,
-    expectedStatus,
-    {
-      headers: {
-        Authorization:
-          `Bearer ${token}`,
-      },
-    },
-  );
-}
-
 describe(
   'KAVACH API dataset integration',
   {
@@ -321,17 +227,269 @@ describe(
   () => {
     before(
       async () => {
+        temporarySecurityDirectory =
+          await mkdtemp(
+            path.join(
+              os.tmpdir(),
+              'kavach-security-test-',
+            ),
+          );
+
+        process.env
+          .KAVACH_SECURITY_DIRECTORY =
+          temporarySecurityDirectory;
+
+        const {
+          createOperatorAccount,
+        } =
+          await import(
+            '../security/security-service.js'
+          );
+
+        await createOperatorAccount(
+          'integration-admin',
+          'Integration Administrator',
+          'ADMIN',
+          'IntegrationAdmin!2026',
+        );
+
+        await createOperatorAccount(
+          'integration-analyst',
+          'Integration Analyst',
+          'ANALYST',
+          'IntegrationAnalyst!2026',
+        );
+
+        const {
+          startApiTestServer,
+        } =
+          await import(
+            './api-test-server.js'
+          );
+
         testServer =
           await startApiTestServer();
 
-        accessToken =
-          await createAuthenticatedTestOperator();
+        const adminLogin =
+          await requestJson<unknown>(
+            testServer.baseUrl,
+            '/auth/login',
+            200,
+            {
+              method: 'POST',
+
+              omitDefaultAuthorization:
+                true,
+
+              headers: {
+                'content-type':
+                  'application/json',
+              },
+
+              body:
+                JSON.stringify({
+                  username:
+                    'integration-admin',
+
+                  password:
+                    'IntegrationAdmin!2026',
+                }),
+            },
+          );
+
+        assertRecord(
+          adminLogin.body,
+          'Administrator login',
+        );
+
+        const adminToken =
+          readString(
+            adminLogin.body,
+            'accessToken',
+          );
+
+        setDefaultTestAccessToken(
+          adminToken,
+        );
+
+        const analystLogin =
+          await requestJson<unknown>(
+            testServer.baseUrl,
+            '/auth/login',
+            200,
+            {
+              method: 'POST',
+
+              omitDefaultAuthorization:
+                true,
+
+              headers: {
+                'content-type':
+                  'application/json',
+              },
+
+              body:
+                JSON.stringify({
+                  username:
+                    'integration-analyst',
+
+                  password:
+                    'IntegrationAnalyst!2026',
+                }),
+            },
+          );
+
+        assertRecord(
+          analystLogin.body,
+          'Analyst login',
+        );
+
+        analystAccessToken =
+          readString(
+            analystLogin.body,
+            'accessToken',
+          );
       },
     );
 
     after(
       async () => {
+        setDefaultTestAccessToken(
+          null,
+        );
+
         await testServer.close();
+
+        delete process.env
+          .KAVACH_SECURITY_DIRECTORY;
+
+        await rm(
+          temporarySecurityDirectory,
+          {
+            recursive: true,
+            force: true,
+          },
+        );
+      },
+    );
+
+    it(
+      'rejects unauthenticated protected requests',
+      async () => {
+        const response =
+          await requestJson<unknown>(
+            testServer.baseUrl,
+            '/analytics/overview',
+            401,
+            {
+              omitDefaultAuthorization:
+                true,
+            },
+          );
+
+        assert.equal(
+          readErrorCode(
+            response.body,
+          ),
+          'AUTHENTICATION_REQUIRED',
+        );
+      },
+    );
+
+    it(
+      'enforces analyst permissions',
+      async () => {
+        const analystHeaders = {
+          authorization:
+            `Bearer ${analystAccessToken}`,
+        };
+
+        const analytics =
+          await requestJson<unknown>(
+            testServer.baseUrl,
+            '/analytics/overview',
+            200,
+            {
+              omitDefaultAuthorization:
+                true,
+
+              headers:
+                analystHeaders,
+            },
+          );
+
+        assertRecord(
+          analytics.body,
+          'Analyst analytics response',
+        );
+
+        const cases =
+          await requestJson<unknown>(
+            testServer.baseUrl,
+            '/cases?page=1&pageSize=5',
+            403,
+            {
+              omitDefaultAuthorization:
+                true,
+
+              headers:
+                analystHeaders,
+            },
+          );
+
+        assert.equal(
+          readErrorCode(
+            cases.body,
+          ),
+          'PERMISSION_DENIED',
+        );
+      },
+    );
+
+    it(
+      'returns hardened security headers',
+      async () => {
+        const response =
+          await requestJson<unknown>(
+            testServer.baseUrl,
+            '/analytics/overview',
+          );
+
+        assert.equal(
+          response.headers.get(
+            'x-content-type-options',
+          ),
+          'nosniff',
+        );
+
+        assert.equal(
+          response.headers.get(
+            'x-frame-options',
+          ),
+          'DENY',
+        );
+
+        assert.equal(
+          response.headers.get(
+            'referrer-policy',
+          ),
+          'no-referrer',
+        );
+
+        assert.ok(
+          response.headers.get(
+            'x-request-id',
+          ),
+        );
+
+        assert.match(
+          response.headers.get(
+            'cache-control',
+          ) ??
+            '',
+
+          /no-store/,
+        );
       },
     );
 
@@ -387,7 +545,8 @@ describe(
       'loads a page of FIR records',
       async () => {
         const response =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             '/cases?page=1&pageSize=5',
           );
 
@@ -433,7 +592,8 @@ describe(
       'loads complete FIR details',
       async () => {
         const response =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             '/cases/1',
           );
 
@@ -472,12 +632,14 @@ describe(
       'returns a bounded explainable priority assessment',
       async () => {
         const first =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             '/cases/1/priority',
           );
 
         const second =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             '/cases/1/priority',
           );
 
@@ -555,7 +717,8 @@ describe(
       'returns a sorted priority queue',
       async () => {
         const response =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             '/priority-queue?page=1&pageSize=25',
           );
 
@@ -633,12 +796,14 @@ describe(
           ].join('');
 
         const first =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             route,
           );
 
         const second =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             route,
           );
 
@@ -722,7 +887,8 @@ describe(
       'returns all hotspot periods and locations',
       async () => {
         const optionsResponse =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             '/hotspots/filter-options',
           );
 
@@ -740,7 +906,8 @@ describe(
         );
 
         const summaryResponse =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             '/hotspots/summary?limit=180',
           );
 
@@ -797,7 +964,8 @@ describe(
       'returns a twelve-month hotspot trend',
       async () => {
         const summaryResponse =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             '/hotspots/summary?limit=1',
           );
 
@@ -833,7 +1001,8 @@ describe(
           );
 
         const trendResponse =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             [
               '/hotspots/locations/',
               locationId,
@@ -860,7 +1029,8 @@ describe(
       'returns dataset-wide analytics totals',
       async () => {
         const response =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             '/analytics/overview',
           );
 
@@ -972,7 +1142,8 @@ describe(
       'returns an investigation graph neighborhood',
       async () => {
         const response =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             [
               '/graph/neighborhood',
               '?rootNodeId=CASE%3A1',
@@ -1033,7 +1204,8 @@ describe(
       'rejects invalid request parameters',
       async () => {
         const invalidSimilar =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             '/cases/1/similar?limit=51',
 
             400,
@@ -1047,7 +1219,8 @@ describe(
         );
 
         const invalidHotspot =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             '/hotspots/summary?month=13',
 
             400,
@@ -1061,7 +1234,8 @@ describe(
         );
 
         const invalidAnalytics =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             [
               '/analytics/overview',
               '?registeredFrom=2026-01-01',
@@ -1084,7 +1258,8 @@ describe(
       'returns not-found errors for missing resources',
       async () => {
         const missingCase =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             '/cases/999999',
 
             404,
@@ -1102,7 +1277,8 @@ describe(
         );
 
         const missingSimilarity =
-          await requestProtectedJson<unknown>(
+          await requestJson<unknown>(
+            testServer.baseUrl,
             '/cases/999999/similar',
 
             404,

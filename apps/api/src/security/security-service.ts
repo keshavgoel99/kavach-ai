@@ -31,23 +31,40 @@ import type {
   SecurityPermission,
 } from '@kavach/shared-types';
 
-const SECURITY_DIRECTORY =
+const DEFAULT_SECURITY_DIRECTORY =
   path.resolve(
     __dirname,
     '../../../../runtime/security',
   );
 
-const OPERATOR_STORE_PATH =
-  path.join(
-    SECURITY_DIRECTORY,
+function getSecurityDirectory(): string {
+  const configuredDirectory =
+    process.env
+      .KAVACH_SECURITY_DIRECTORY
+      ?.trim();
+
+  if (configuredDirectory) {
+    return path.resolve(
+      configuredDirectory,
+    );
+  }
+
+  return DEFAULT_SECURITY_DIRECTORY;
+}
+
+function getOperatorStorePath(): string {
+  return path.join(
+    getSecurityDirectory(),
     'operators.json',
   );
+}
 
-const AUDIT_LOG_PATH =
-  path.join(
-    SECURITY_DIRECTORY,
+function getAuditLogPath(): string {
+  return path.join(
+    getSecurityDirectory(),
     'audit.jsonl',
   );
+}
 
 const IDLE_TIMEOUT_MINUTES =
   30;
@@ -304,10 +321,9 @@ function toIsoString(
   ).toISOString();
 }
 
-async function ensureSecurityDirectory():
-Promise<void> {
+async function ensureSecurityDirectory(): Promise<void> {
   await mkdir(
-    SECURITY_DIRECTORY,
+    getSecurityDirectory(),
     {
       recursive: true,
     },
@@ -319,7 +335,7 @@ Promise<OperatorStore> {
   try {
     const content =
       await readFile(
-        OPERATOR_STORE_PATH,
+        getOperatorStorePath(),
         'utf8',
       );
 
@@ -371,7 +387,7 @@ async function writeOperatorStore(
   await ensureSecurityDirectory();
 
   const temporaryPath =
-    `${OPERATOR_STORE_PATH}.tmp`;
+    `${getOperatorStorePath()}.tmp`;
 
   await writeFile(
     temporaryPath,
@@ -387,7 +403,7 @@ async function writeOperatorStore(
 
   await rename(
     temporaryPath,
-    OPERATOR_STORE_PATH,
+    getOperatorStorePath(),
   );
 }
 
@@ -786,7 +802,7 @@ export class SecurityService {
           await ensureSecurityDirectory();
 
           await appendFile(
-            AUDIT_LOG_PATH,
+            getAuditLogPath(),
 
             `${JSON.stringify(entry)}\n`,
 
@@ -824,7 +840,7 @@ export class SecurityService {
     try {
       content =
         await readFile(
-          AUDIT_LOG_PATH,
+          getAuditLogPath(),
           'utf8',
         );
     } catch (

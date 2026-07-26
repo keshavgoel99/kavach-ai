@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, session } from 'electron';
 import type {
   ApiHealth,
   InvestigationGraphQuery,
@@ -20,11 +20,11 @@ import {
   fetchAuthStatus,
   fetchCurrentAuthSession,
   fetchSecurityAuditLog,
-  getCachedAuthSession,
   loginOperator,
   logoutOperator,
   recordSecurityAuditEvent,
   requestJson,
+  setAuthenticationInvalidatedListener,
 } from './case-api-client';
 
 import type {
@@ -77,6 +77,9 @@ const IPC_CHANNELS = {
 
   recordSecurityAuditEvent:
     'kavach:security:record-audit-event',
+
+  sessionExpired:
+    'kavach:security:session-expired',
 } as const;
 
 const ALLOWED_GRAPH_RELATIONSHIPS =
@@ -528,8 +531,58 @@ function createWindow(): void {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+
+      webSecurity: true,
+      allowRunningInsecureContent:
+        false,
+
+      devTools:
+        !app.isPackaged,
+
+      spellcheck:
+        false,
     },
   });
+
+  mainWindow.webContents
+    .setWindowOpenHandler(
+      () => ({
+        action: 'deny',
+      }),
+    );
+
+  mainWindow.webContents.on(
+    'will-navigate',
+    (
+      event,
+      navigationUrl,
+    ) => {
+      const currentUrl =
+        mainWindow
+          .webContents
+          .getURL();
+
+      const currentOrigin =
+        currentUrl
+          ? new URL(
+              currentUrl,
+            ).origin
+          : null;
+
+      const targetOrigin =
+        new URL(
+          navigationUrl,
+        ).origin;
+
+      if (
+        currentOrigin &&
+        targetOrigin !==
+          currentOrigin
+      ) {
+        event.preventDefault();
+      }
+    },
+  );
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
@@ -546,6 +599,56 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   registerIpcHandlers();
+
+  session.defaultSession
+    .webRequest
+    .onHeadersReceived(
+      (
+        details,
+        callback,
+      ) => {
+        callback({
+          responseHeaders: {
+            ...details.responseHeaders,
+
+            'Content-Security-Policy': [
+              [
+                "default-src 'self'",
+                "script-src 'self'",
+                "style-src 'self' 'unsafe-inline'",
+                "img-src 'self' data:",
+                "font-src 'self' data:",
+                "connect-src 'self'",
+                "object-src 'none'",
+                "frame-src 'none'",
+                "base-uri 'none'",
+                "form-action 'self'",
+              ].join('; '),
+            ],
+          },
+        });
+      },
+    );
+  
+  setAuthenticationInvalidatedListener(
+    () => {
+      BrowserWindow
+        .getAllWindows()
+        .forEach(
+          (window) => {
+            if (
+              !window.isDestroyed()
+            ) {
+              window.webContents.send(
+                IPC_CHANNELS
+                  .sessionExpired,
+              );
+            }
+          },
+        );
+    },
+  );
+
   createWindow();
 
   app.on('activate', () => {

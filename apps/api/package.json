@@ -3,6 +3,19 @@
   "version": "0.1.0",
   "description": "",
   "main": "dist/server.js",
+  "types": "dist/server.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/server.d.ts",
+      "require": "./dist/server.js",
+      "default": "./dist/server.js"
+    },
+    "./embedded-server": {
+      "types": "./dist/embedded-server.d.ts",
+      "require": "./dist/embedded-server.js",
+      "default": "./dist/embedded-server.js"
+    }
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/server.ts",
@@ -17,7 +30,7 @@
     "hotspot:validate": "tsx src/hotspots/validate-hotspot-service.ts",
     "analytics:validate": "tsx src/analytics/validate-analytics-service.ts",
     "test:unit": "node --import tsx --test src/testing/query-validation.test.ts",
-    "test:integration": "node --import tsx --test --test-concurrency=1 src/testing/api.integration.test.ts",
+    "test:integration": "node --import tsx --test --test-concurrency=1 src/testing/api.integration.test.ts src/testing/security.integration.test.ts",
     "verify": "npm run typecheck && npm run test:unit && npm run test:integration",
     "security:create-operator": "tsx src/security/create-operator.ts"
   },
@@ -39,4 +52,3 @@
   },
   "private": true
 }
-

@@ -222,3 +222,16 @@
   line-height: 1.6;
   word-break: break-all;
 }
+
+.security-login__notice {
+  margin-top: 13px;
+  padding: 10px;
+  border:
+    1px solid rgba(245, 191, 91, 0.25);
+  border-radius: 8px;
+  background:
+    rgba(245, 191, 91, 0.07);
+  color: #f6cf84;
+  font-size: 9px;
+  line-height: 1.45;
+}

@@ -1,138 +1,144 @@
 import {
+  createServer,
+} from 'node:http';
+
+import {
   app,
 } from './app';
 
-import {
-  getCoreDataset,
-} from './data/dataset-service';
+const API_HOST =
+  '127.0.0.1';
 
-const DEFAULT_PORT = 4000;
-const HOST = '127.0.0.1';
+const API_PORT =
+  Number(
+    process.env
+      .KAVACH_API_PORT ??
+    4000,
+  );
 
-function resolvePort(): number {
-  const configuredPort = process.env.API_PORT;
-
-  if (!configuredPort) {
-    return DEFAULT_PORT;
-  }
-
-  const parsedPort = Number(configuredPort);
-
-  if (
-    !Number.isInteger(parsedPort) ||
-    parsedPort < 1 ||
-    parsedPort > 65_535
-  ) {
-    throw new Error(
-      'API_PORT must be an integer between 1 and 65535. ' +
-      `Received: ${configuredPort}`,
-    );
-  }
-
-  return parsedPort;
+if (
+  !Number.isSafeInteger(
+    API_PORT,
+  ) ||
+  API_PORT < 1 ||
+  API_PORT > 65_535
+) {
+  throw new Error(
+    'KAVACH_API_PORT must contain a valid TCP port.',
+  );
 }
 
-async function startServer(): Promise<void> {
-  console.log('');
-  console.log(
-    'KAVACH DATA LAYER · INITIALIZING',
-  );
+const server =
+  createServer(app);
 
-  const dataset = await getCoreDataset();
+server.requestTimeout =
+  30_000;
 
-  const port = resolvePort();
+server.headersTimeout =
+  35_000;
 
-  const server = app.listen(
-    port,
-    HOST,
-    () => {
-      console.log('');
-      console.log('KAVACH API · OPERATIONAL');
-      console.log(
-        `Dataset: ${dataset.manifest.dataset_name}`,
-      );
-      console.log(
-        `Cases loaded: ${dataset.cases.length}`,
-      );
-      console.log(
-        `Core tables: ${
-          Object.keys(dataset.rawTables).length
-        }`,
-      );
-      console.log(
-        `Local address: http://${HOST}:${port}`,
-      );
-      console.log(
-        `Health check:  http://${HOST}:${port}/api/v1/health`,
-      );
-      console.log('');
-    },
-  );
+server.keepAliveTimeout =
+  5_000;
 
-  function shutDown(
-    signal: NodeJS.Signals,
-  ): void {
+server.maxHeadersCount =
+  100;
+
+server.listen(
+  API_PORT,
+  API_HOST,
+  () => {
+    console.log('');
+
     console.log(
-      `\n${signal} received. Shutting down Kavach API...`,
+      'KAVACH API · READY',
     );
 
-    server.close((error) => {
+    console.log(
+      `http://${API_HOST}:${API_PORT}`,
+    );
+  },
+);
+
+let shuttingDown =
+  false;
+
+async function shutdown(
+  signal: string,
+): Promise<void> {
+  if (shuttingDown) {
+    return;
+  }
+
+  shuttingDown = true;
+
+  console.log('');
+
+  console.log(
+    `KAVACH API · SHUTDOWN (${signal})`,
+  );
+
+  const forcedExit =
+    setTimeout(
+      () => {
+        console.error(
+          'KAVACH API · FORCED SHUTDOWN',
+        );
+
+        process.exit(1);
+      },
+      10_000,
+    );
+
+  forcedExit.unref();
+
+  server.close(
+    (error) => {
+      clearTimeout(
+        forcedExit,
+      );
+
       if (error) {
         console.error(
-          'The API could not shut down cleanly:',
           error,
         );
 
         process.exit(1);
+
+        return;
       }
 
-      console.log('Kavach API stopped.');
       process.exit(0);
-    });
-
-    setTimeout(() => {
-      console.error(
-        'Forced shutdown after timeout.',
-      );
-
-      process.exit(1);
-    }, 10_000).unref();
-  }
-
-  process.once('SIGINT', shutDown);
-  process.once('SIGTERM', shutDown);
+    },
+  );
 }
 
-void startServer().catch(
-  (error: unknown) => {
-    console.error('');
+process.once(
+  'SIGINT',
+  () => {
+    void shutdown(
+      'SIGINT',
+    );
+  },
+);
+
+process.once(
+  'SIGTERM',
+  () => {
+    void shutdown(
+      'SIGTERM',
+    );
+  },
+);
+
+server.on(
+  'error',
+  (error) => {
     console.error(
-      'KAVACH API · STARTUP FAILED',
+      'KAVACH API · SERVER ERROR',
     );
 
-    if (error instanceof Error) {
-      console.error(error.message);
+    console.error(error);
 
-      const contextualError =
-        error as Error & {
-          context?:
-            Record<string, unknown>;
-        };
-
-      if (contextualError.context) {
-        console.error(
-          JSON.stringify(
-            contextualError.context,
-            null,
-            2,
-          ),
-        );
-      }
-    } else {
-      console.error(error);
-    }
-
-    console.error('');
-    process.exit(1);
+    process.exitCode = 1;
   },
 );
