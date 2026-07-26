@@ -10,6 +10,7 @@ import type {
 
 import './CaseDetailDrawer.css';
 import { CaseEntityIntelligence } from './CaseEntityIntelligence';
+import { CasePriorityExplanation } from './CasePriorityExplanation';
 import {
   EntityProfileWorkspace,
 } from './EntityProfileWorkspace';
@@ -513,6 +514,8 @@ export function CaseDetailDrawer({
                 </div>
               </div>
             </section>
+
+            <CasePriorityExplanation caseId={detail.caseId} />
 
             <section className="case-detail__section">
               <div className="case-detail__section-heading">
