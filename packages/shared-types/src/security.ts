@@ -52,6 +52,14 @@ export interface AuthStatusResponse {
   absoluteTimeoutHours: number;
 }
 
+export interface AuthBootstrapRequest {
+  username: string;
+
+  displayName: string;
+
+  password: string;
+}
+
 export interface AuthLoginRequest {
   username: string;
   password: string;

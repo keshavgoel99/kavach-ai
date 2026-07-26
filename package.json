@@ -10,13 +10,15 @@
     "packages/schema-catalog"
   ],
   "scripts": {
-    "dev": "npm run build --workspace=@kavach/schema-catalog && concurrently --kill-others --names API,DESKTOP \"npm run dev --workspace=@kavach/api\" \"npm start --workspace=@kavach/desktop\"",
+    "dev": "npm run build --workspace=@kavach/schema-catalog && npm run build --workspace=@kavach/shared-types && npm run build --workspace=@kavach/api && concurrently --kill-others --names API,DESKTOP \"npm run dev --workspace=@kavach/api\" \"npm start --workspace=@kavach/desktop\"",
     "dev:api": "npm run dev --workspace=@kavach/api",
     "dev:desktop": "npm start --workspace=@kavach/desktop",
     "typecheck": "npm run typecheck --workspace=@kavach/schema-catalog && npm run typecheck --workspace=@kavach/shared-types && npm run typecheck --workspace=@kavach/api && npm run typecheck --workspace=@kavach/desktop && npm run lint --workspace=@kavach/desktop",
     "build": "npm run build --workspace=@kavach/schema-catalog && npm run build --workspace=@kavach/shared-types && npm run build --workspace=@kavach/api && npm run package --workspace=@kavach/desktop",
     "verify:ci": "npm run build --workspace=@kavach/schema-catalog && npm run build --workspace=@kavach/shared-types && npm run typecheck && npm run test:unit --workspace=@kavach/api && npm run security:validate --workspace=@kavach/desktop",
-    "verify:dataset": "npm run verify:ci && npm run priority:validate --workspace=@kavach/api && npm run similarity:validate --workspace=@kavach/api && npm run similarity:index:validate --workspace=@kavach/api && npm run hotspot:validate --workspace=@kavach/api && npm run analytics:validate --workspace=@kavach/api && npm run test:integration --workspace=@kavach/api"
+    "verify:dataset": "npm run verify:ci && npm run priority:validate --workspace=@kavach/api && npm run similarity:validate --workspace=@kavach/api && npm run similarity:index:validate --workspace=@kavach/api && npm run hotspot:validate --workspace=@kavach/api && npm run analytics:validate --workspace=@kavach/api && npm run test:integration --workspace=@kavach/api",
+    "release:prepare": "npm run verify:dataset && npm run build --workspace=@kavach/api",
+    "release:windows": "npm run release:prepare && npm run make --workspace=@kavach/desktop -- --platform=win32 --arch=x64 && npm run release:verify --workspace=@kavach/desktop"
   },
   "engines": {
     "node": ">=22.12.0"

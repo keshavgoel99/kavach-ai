@@ -3,6 +3,7 @@ import {
 } from 'express';
 
 import type {
+  AuthBootstrapRequest,
   AuthLoginRequest,
   ClientAuditEventRequest,
   SecurityAuditEventType,
@@ -14,6 +15,7 @@ import {
 } from './security-middleware';
 
 import {
+  createOperatorAccount,
   getSecurityService,
 } from './security-service';
 
@@ -41,6 +43,40 @@ function isRecord(
     value !== null &&
     !Array.isArray(value)
   );
+}
+
+function parseBootstrapRequest(
+  body: unknown,
+): AuthBootstrapRequest {
+  if (!isRecord(body)) {
+    throw new Error(
+      'An administrator setup request is required.',
+    );
+  }
+
+  if (
+    typeof body.username !== 'string' ||
+    typeof body.displayName !== 'string' ||
+    typeof body.password !== 'string'
+  ) {
+    throw new Error(
+      [
+        'Username, display name and',
+        'password are required.',
+      ].join(' '),
+    );
+  }
+
+  return {
+    username:
+      body.username.trim(),
+
+    displayName:
+      body.displayName.trim(),
+
+    password:
+      body.password,
+  };
 }
 
 function parseLoginRequest(
@@ -226,6 +262,90 @@ export function createAuthRouter(): Router {
         error: unknown
       ) {
         next(error);
+      }
+    },
+  );
+
+  router.post(
+    '/bootstrap',
+
+    async (
+      request,
+      response,
+    ) => {
+      try {
+        const service =
+          getSecurityService();
+
+        const status =
+          await service.getStatus();
+
+        if (status.configured) {
+          response
+            .status(409)
+            .json({
+              error: {
+                code:
+                  'SECURITY_ALREADY_CONFIGURED',
+
+                message:
+                  [
+                    'The first administrator',
+                    'has already been created.',
+                  ].join(' '),
+              },
+            });
+
+          return;
+        }
+
+        const setupRequest =
+          parseBootstrapRequest(
+            request.body,
+          );
+
+        await createOperatorAccount(
+          setupRequest.username,
+          setupRequest.displayName,
+          'ADMIN',
+          setupRequest.password,
+        );
+
+        const result =
+          await service.login(
+            setupRequest.username,
+            setupRequest.password,
+
+            {
+              clientAddress:
+                request.ip ?? null,
+
+              userAgent:
+                request.get(
+                  'user-agent',
+                ) ?? null,
+            },
+          );
+
+        response
+          .status(201)
+          .json(result);
+      } catch (
+        error: unknown
+      ) {
+        response
+          .status(400)
+          .json({
+            error: {
+              code:
+                'SECURITY_BOOTSTRAP_FAILED',
+
+              message:
+                error instanceof Error
+                  ? error.message
+                  : 'Administrator setup failed.',
+            },
+          });
       }
     },
   );

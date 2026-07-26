@@ -1,4 +1,5 @@
 import type {
+  AuthBootstrapRequest,
   AuthLoginRequest,
   AuthSession,
   AuthStatusResponse,
@@ -8,6 +9,11 @@ import type {
 } from '@kavach/shared-types';
 
 export interface SecurityDesktopApi {
+  bootstrapAdministrator(
+    request:
+      AuthBootstrapRequest,
+  ): Promise<AuthSession>;
+
   getStatus():
     Promise<AuthStatusResponse>;
 

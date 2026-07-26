@@ -180,7 +180,7 @@ export async function startEmbeddedKavachApi(
   console.log('');
 
   console.log(
-    'KAVACH EMBEDDED API - INITIALIZING',
+    'KAVACH EMBEDDED API · INITIALIZING',
   );
 
   const dataset =
@@ -259,7 +259,7 @@ export async function startEmbeddedKavachApi(
       activeApi = null;
 
       console.log(
-        'KAVACH EMBEDDED API - STOPPED',
+        'KAVACH EMBEDDED API · STOPPED',
       );
     },
   };
@@ -268,7 +268,7 @@ export async function startEmbeddedKavachApi(
     embeddedApi;
 
   console.log(
-    'KAVACH EMBEDDED API - OPERATIONAL',
+    'KAVACH EMBEDDED API · OPERATIONAL',
   );
 
   console.log(

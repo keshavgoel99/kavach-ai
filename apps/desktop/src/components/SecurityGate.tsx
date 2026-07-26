@@ -101,6 +101,30 @@ export function SecurityGate({
   ] =
     useState(false);
 
+  const [
+    displayName,
+    setDisplayName,
+  ] =
+    useState('');
+
+  const [
+    confirmPassword,
+    setConfirmPassword,
+  ] =
+    useState('');
+
+  const [
+    submitting,
+    setSubmitting,
+  ] =
+    useState(false);
+
+  const [
+    setupError,
+    setSetupError,
+  ] =
+    useState<string | null>(null);
+
   useEffect(() => {
     let active = true;
 
@@ -239,6 +263,45 @@ export function SecurityGate({
     session?.sessionId,
   ]);
 
+  async function bootstrapAdministrator(
+    event: React.FormEvent<HTMLFormElement>,
+  ): Promise<void> {
+    event.preventDefault();
+
+    setSubmitting(true);
+    setSetupError(null);
+
+    try {
+      if (password !== confirmPassword) {
+        throw new Error('The passwords do not match.');
+      }
+
+      const authenticatedSession =
+        await window.kavach
+          .security
+          .bootstrapAdministrator({
+            username,
+            displayName,
+            password,
+          });
+
+      setSession(authenticatedSession);
+      setPhase('authenticated');
+
+      setPassword('');
+      setConfirmPassword('');
+      setSessionMessage(null);
+    } catch (error: unknown) {
+      setSetupError(
+        error instanceof Error
+          ? error.message
+          : 'Administrator setup failed.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   async function handleLogin(
     event:
       React.FormEvent,
@@ -309,37 +372,117 @@ export function SecurityGate({
   ) {
     return (
       <div className="security-gate">
-        <div className="security-gate__card">
+        <form
+          className="security-gate__card security-setup"
+          onSubmit={bootstrapAdministrator}
+        >
           <div className="security-gate__brand">
-            <div className="security-gate__logo">
-              K
-            </div>
-
-            <h1>
-              Kavach AI
-            </h1>
+            <div className="security-gate__logo">K</div>
+            <h1>Kavach AI</h1>
           </div>
 
           <div className="security-gate__notice">
             <span className="security-gate__notice-eyebrow">
-              INITIAL SETUP REQUIRED
+              KAVACH AI · FIRST-RUN SECURITY
             </span>
 
-            <p>
-              No operator accounts have been
-              configured. Run the operator
-              creation command on the API
-              server to get started.
-            </p>
+            <h2>Create administrator</h2>
 
-            <code className="security-gate__command">
-              npm run security:create-operator
-              -- --username admin
-              --display-name &quot;Admin&quot;
-              --role ADMIN
-            </code>
+            <p style={{ marginTop: '12px' }}>
+              Create the first local operator.
+              This account receives administrative
+              permissions and can provision
+              additional operators later.
+            </p>
           </div>
-        </div>
+
+          <label className="security-gate__label" style={{ marginTop: '24px' }}>
+            <span>Administrator username</span>
+            <input
+              className="security-gate__input"
+              autoFocus
+              autoComplete="username"
+              value={username}
+              disabled={submitting}
+              onChange={(event) =>
+                setUsername(event.target.value)
+              }
+            />
+          </label>
+
+          <label className="security-gate__label">
+            <span>Display name</span>
+            <input
+              className="security-gate__input"
+              autoComplete="name"
+              value={displayName}
+              disabled={submitting}
+              onChange={(event) =>
+                setDisplayName(event.target.value)
+              }
+            />
+          </label>
+
+          <label className="security-gate__label">
+            <span>Administrator password</span>
+            <input
+              className="security-gate__input"
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              disabled={submitting}
+              onChange={(event) =>
+                setPassword(event.target.value)
+              }
+            />
+          </label>
+
+          <label className="security-gate__label">
+            <span>Confirm password</span>
+            <input
+              className="security-gate__input"
+              type="password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              disabled={submitting}
+              onChange={(event) =>
+                setConfirmPassword(event.target.value)
+              }
+            />
+          </label>
+
+          <small className="security-setup__requirement">
+            Use at least 12 characters.
+            The password is never stored
+            in plain text.
+          </small>
+
+          {setupError && (
+            <div
+              className="security-gate__error"
+              role="alert"
+            >
+              {setupError}
+            </div>
+          )}
+
+          <button
+            className="security-gate__submit"
+            type="submit"
+            style={{ marginTop: '24px' }}
+            disabled={
+              submitting ||
+              !username.trim() ||
+              !displayName.trim() ||
+              !password ||
+              !confirmPassword
+            }
+          >
+            {submitting
+              ? 'Creating administrator…'
+              : 'Create secure workspace'}
+          </button>
+        </form>
       </div>
     );
   }

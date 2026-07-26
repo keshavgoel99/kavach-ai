@@ -117,6 +117,7 @@ export type {
 } from './report';
 
 export type {
+  AuthBootstrapRequest,
   AuthLoginRequest,
   AuthLoginResponse,
   AuthSession,

@@ -228,10 +228,214 @@
   padding: 10px;
   border:
     1px solid rgba(245, 191, 91, 0.25);
+}
+
+.security-gate__brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.security-gate__logo {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 800;
+  background: #2563eb;
+  border-radius: 13px;
+  box-shadow:
+    0 4px 18px rgba(37, 99, 235, 0.35);
+}
+
+.security-gate__brand h1 {
+  margin: 0;
+  color: #f2f6f9;
+  font-size: 20px;
+  letter-spacing: 0.01em;
+}
+
+.security-gate__checking {
+  margin: 0;
+  color: rgba(222, 231, 240, 0.55);
+  font-size: 14px;
+  text-align: center;
+  animation:
+    security-pulse 1.6s
+    ease-in-out infinite;
+}
+
+@keyframes security-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+.security-gate__eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: #75dfc4;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.security-gate__subtitle {
+  margin: 0 0 22px;
+  color: rgba(222, 231, 240, 0.58);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.security-gate__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.security-gate__form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.security-gate__form label span {
+  color: rgba(222, 231, 240, 0.72);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.security-gate__form input {
+  padding: 12px 14px;
+  border:
+    1px solid rgba(126, 150, 172, 0.25);
+  border-radius: 10px;
+  outline: none;
+  background: rgba(7, 12, 19, 0.7);
+  color: #f4f7fa;
+  font: inherit;
+  font-size: 14px;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.security-gate__form input:focus {
+  border-color:
+    rgba(117, 223, 196, 0.7);
+  box-shadow:
+    0 0 0 3px rgba(117, 223, 196, 0.08);
+}
+
+.security-gate__form button {
+  margin-top: 4px;
+  padding: 13px 20px;
+  border:
+    1px solid rgba(37, 99, 235, 0.45);
+  border-radius: 10px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(37, 99, 235, 0.45),
+      rgba(37, 99, 235, 0.28)
+    );
+  color: #c8deff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    transform 0.1s;
+}
+
+.security-gate__form button:hover:not(:disabled) {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(37, 99, 235, 0.58),
+      rgba(37, 99, 235, 0.38)
+    );
+}
+
+.security-gate__form button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.security-gate__form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.security-gate__error {
+  padding: 11px 14px;
+  border:
+    1px solid rgba(255, 113, 113, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 88, 88, 0.08);
+  color: #ffaaaa;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.security-gate__notice {
+  padding: 18px;
+  border:
+    1px solid rgba(245, 191, 91, 0.22);
+  border-radius: 12px;
+  background: rgba(245, 191, 91, 0.05);
+}
+
+.security-gate__notice-eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #f6cf84;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.security-gate__notice p {
+  margin: 0 0 14px;
+  color: rgba(222, 231, 240, 0.7);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.security-gate__command {
+  display: block;
+  padding: 11px 14px;
+  border:
+    1px solid rgba(126, 150, 172, 0.15);
+  border-radius: 8px;
+  background: rgba(7, 12, 19, 0.65);
+  color: #b4cbde;
+  font-family: monospace;
+  font-size: 11.5px;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.security-login__notice {
+  margin-top: 13px;
+  padding: 10px;
+  border:
+    1px solid rgba(245, 191, 91, 0.25);
   border-radius: 8px;
   background:
     rgba(245, 191, 91, 0.07);
   color: #f6cf84;
   font-size: 9px;
+  line-height: 1.45;
+}
+
+.security-setup__requirement {
+  display: block;
+  margin-top: 11px;
+  color:
+    rgba(222, 231, 240, 0.4);
+  font-size: 8px;
   line-height: 1.45;
 }

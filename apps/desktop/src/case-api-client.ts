@@ -1,5 +1,6 @@
 import type {
   ApiErrorResponse,
+  AuthBootstrapRequest,
   AuthLoginRequest,
   AuthLoginResponse,
   AuthSession,
@@ -33,8 +34,164 @@ import type {
   CaseListRequest,
 } from './types/case-bridge';
 
-const API_BASE_URL =
+const DEFAULT_API_BASE_URL =
   'http://127.0.0.1:4000/api/v1';
+
+let apiBaseUrl =
+  normalizeApiBaseUrl(
+    process.env
+      .KAVACH_API_BASE_URL ??
+      DEFAULT_API_BASE_URL,
+  );
+
+function normalizeApiBaseUrl(
+  suppliedValue: string,
+): string {
+  const value =
+    suppliedValue.trim();
+
+  let url: URL;
+
+  try {
+    url =
+      new URL(value);
+  } catch {
+    throw new Error(
+      'KAVACH API base URL is invalid.',
+    );
+  }
+
+  if (
+    url.protocol !== 'http:' ||
+    ![
+      '127.0.0.1',
+      'localhost',
+    ].includes(
+      url.hostname,
+    )
+  ) {
+    throw new Error(
+      [
+        'KAVACH API communication',
+        'must use a local HTTP address.',
+      ].join(' '),
+    );
+  }
+
+  if (
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash
+  ) {
+    throw new Error(
+      'KAVACH API base URL contains unsupported components.',
+    );
+  }
+
+  const pathname =
+    url.pathname
+      .replace(
+        /\/+$/g,
+        '',
+      );
+
+  if (
+    pathname !==
+    '/api/v1'
+  ) {
+    throw new Error(
+      'KAVACH API base URL must end with /api/v1.',
+    );
+  }
+
+  return [
+    url.origin,
+    pathname,
+  ].join('');
+}
+
+export function configureApiBaseUrl(
+  suppliedValue: string,
+): void {
+  apiBaseUrl =
+    normalizeApiBaseUrl(
+      suppliedValue,
+    );
+}
+
+export function getConfiguredApiBaseUrl(): string {
+  return apiBaseUrl;
+}
+
+export async function bootstrapAdministrator(
+  suppliedRequest:
+    unknown,
+): Promise<AuthSession> {
+  if (
+    !isRecord(
+      suppliedRequest,
+    ) ||
+    typeof suppliedRequest
+      .username !== 'string' ||
+    typeof suppliedRequest
+      .displayName !== 'string' ||
+    typeof suppliedRequest
+      .password !== 'string'
+  ) {
+    throw new Error(
+      [
+        'Username, display name and',
+        'password are required.',
+      ].join(' '),
+    );
+  }
+
+  const request:
+    AuthBootstrapRequest = {
+    username:
+      suppliedRequest
+        .username
+        .trim(),
+
+    displayName:
+      suppliedRequest
+        .displayName
+        .trim(),
+
+    password:
+      suppliedRequest.password,
+  };
+
+  const response =
+    await requestJson<
+      AuthLoginResponse
+    >(
+      '/auth/bootstrap',
+
+      {
+        method: 'POST',
+
+        headers: {
+          'content-type':
+            'application/json',
+        },
+
+        body:
+          JSON.stringify(
+            request,
+          ),
+      },
+    );
+
+  apiAccessToken =
+    response.accessToken;
+
+  cachedAuthSession =
+    response.session;
+
+  return response.session;
+}
 
 let apiAccessToken:
   string | null = null;
@@ -293,7 +450,7 @@ export async function requestJson<ResponseBody>(
   }
 
   const response = await fetch(
-    `${API_BASE_URL}${path}`,
+    `${apiBaseUrl}${path}`,
     {
       ...init,
       headers,

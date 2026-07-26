@@ -1,4 +1,16 @@
-import { app, BrowserWindow, ipcMain, session } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  session,
+} from 'electron';
+
+import {
+  initializeKavachRuntime,
+  stopKavachRuntime,
+} from './release/runtime-bootstrap';
+
 import type {
   ApiHealth,
   InvestigationGraphQuery,
@@ -22,9 +34,11 @@ import {
   fetchSecurityAuditLog,
   loginOperator,
   logoutOperator,
+  bootstrapAdministrator,
   recordSecurityAuditEvent,
   requestJson,
   setAuthenticationInvalidatedListener,
+  getConfiguredApiBaseUrl,
 } from './case-api-client';
 
 import type {
@@ -62,6 +76,9 @@ const IPC_CHANNELS = {
 
   getSecurityStatus:
     'kavach:security:get-status',
+
+  bootstrapAdministrator:
+    'kavach:security:bootstrap-administrator',
 
   login:
     'kavach:security:login',
@@ -262,9 +279,6 @@ function createGraphNeighborhoodPath(
   );
 }
 
-const API_BASE_URL =
-  process.env.KAVACH_API_BASE_URL ?? 'http://127.0.0.1:4000';
-
 async function requestApiHealth(): Promise<ApiHealth> {
   const controller = new AbortController();
 
@@ -274,7 +288,7 @@ async function requestApiHealth(): Promise<ApiHealth> {
 
   try {
     const response = await fetch(
-      `${API_BASE_URL}/api/v1/health`,
+      `${getConfiguredApiBaseUrl()}/health`,
       {
         method: 'GET',
         headers: {
@@ -463,6 +477,19 @@ function registerIpcHandlers(): void {
   );
 
   ipcMain.handle(
+    IPC_CHANNELS
+      .bootstrapAdministrator,
+
+    (
+      _event,
+      request: unknown,
+    ) =>
+      bootstrapAdministrator(
+        request,
+      ),
+  );
+
+  ipcMain.handle(
     IPC_CHANNELS.login,
 
     (
@@ -597,8 +624,12 @@ function createWindow(): void {
   }
 }
 
-app.whenReady().then(() => {
-  registerIpcHandlers();
+app.whenReady()
+  .then(
+    async () => {
+      await initializeKavachRuntime();
+
+      registerIpcHandlers();
 
   session.defaultSession
     .webRequest
@@ -656,7 +687,73 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
-});
+})
+.catch(
+  (
+    error: unknown,
+  ) => {
+    const message =
+      error instanceof Error
+        ? error.message
+        : String(error);
+
+    console.error(
+      'KAVACH STARTUP FAILED',
+    );
+
+    console.error(
+      message,
+    );
+
+    dialog.showErrorBox(
+      'KAVACH AI could not start',
+      message,
+    );
+
+    app.quit();
+  },
+);
+
+let runtimeShutdownStarted =
+  false;
+
+app.on(
+  'before-quit',
+  (
+    event,
+  ) => {
+    if (
+      runtimeShutdownStarted
+    ) {
+      return;
+    }
+
+    runtimeShutdownStarted =
+      true;
+
+    event.preventDefault();
+
+    void stopKavachRuntime()
+      .catch(
+        (
+          error: unknown,
+        ) => {
+          console.error(
+            'KAVACH runtime shutdown failed.',
+          );
+
+          console.error(
+            error,
+          );
+        },
+      )
+      .finally(
+        () => {
+          app.quit();
+        },
+      );
+  },
+);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

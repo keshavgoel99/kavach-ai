@@ -43,6 +43,9 @@ const IPC_CHANNELS = {
   getSecurityStatus:
     'kavach:security:get-status',
 
+  bootstrapAdministrator:
+    'kavach:security:bootstrap-administrator',
+
   login:
     'kavach:security:login',
 
@@ -222,6 +225,16 @@ const kavachDesktopApi: KavachDesktopApi = {
       ipcRenderer.invoke(
         IPC_CHANNELS
           .getSecurityStatus,
+      ),
+
+    bootstrapAdministrator: (
+      request,
+    ) =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS
+          .bootstrapAdministrator,
+
+        request,
       ),
 
     login: (

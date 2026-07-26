@@ -12,7 +12,8 @@
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
     "typecheck": "tsc --noEmit",
-    "security:validate": "tsx src/testing/validate-security-boundaries.ts"
+    "security:validate": "tsx src/testing/validate-security-boundaries.ts",
+    "release:verify": "tsx src/testing/validate-release-layout.ts"
   },
   "keywords": [],
   "author": {
