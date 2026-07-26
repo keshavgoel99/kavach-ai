@@ -17,6 +17,10 @@ import {
   createGraphRouter,
 } from './graph/graph-routes';
 
+import {
+  createPriorityRouter,
+} from './priority/priority-routes';
+
 export function createApp() {
   const app = express();
 
@@ -58,6 +62,11 @@ export function createApp() {
   app.use(
     '/api/v1/graph',
     createGraphRouter(),
+  );
+
+  app.use(
+    '/api/v1',
+    createPriorityRouter(),
   );
 
   app.use((request, response) => {

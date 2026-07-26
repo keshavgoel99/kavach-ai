@@ -377,6 +377,12 @@ export class CasePriorityService {
       KnownAssociationRow[]
     >();
 
+  private readonly assessmentByCase =
+    new Map<
+      number,
+      CasePriorityAssessment
+    >();
+
   private readonly recentCutoffDate:
     Date;
 
@@ -741,6 +747,13 @@ export class CasePriorityService {
   public assessCase(
     caseId: number,
   ): CasePriorityAssessment | null {
+    const cachedAssessment =
+      this.assessmentByCase.get(caseId);
+
+    if (cachedAssessment) {
+      return cachedAssessment;
+    }
+
     const caseRecord =
       this.caseById.get(caseId);
 
@@ -748,30 +761,45 @@ export class CasePriorityService {
       return null;
     }
 
-    return createCasePriorityAssessment(
+    const assessment =
+      createCasePriorityAssessment(
+        caseId,
+
+        this.assessedAt,
+
+        this.createSignals(
+          caseRecord,
+        ),
+      );
+
+    this.assessmentByCase.set(
       caseId,
-
-      this.assessedAt,
-
-      this.createSignals(
-        caseRecord,
-      ),
+      assessment,
     );
+
+    return assessment;
   }
 
-  public assessAll():
-  CasePriorityAssessment[] {
+  public assessAll(): CasePriorityAssessment[] {
     return this.dataset.cases.map(
-      (caseRecord) =>
-        createCasePriorityAssessment(
-          caseRecord.caseMasterId,
+      (caseRecord) => {
+        const assessment =
+          this.assessCase(
+            caseRecord.caseMasterId,
+          );
 
-          this.assessedAt,
+        if (!assessment) {
+          throw new Error(
+            [
+              'Priority assessment could not',
+              'be generated for case',
+              `${caseRecord.caseMasterId}.`,
+            ].join(' '),
+          );
+        }
 
-          this.createSignals(
-            caseRecord,
-          ),
-        ),
+        return assessment;
+      },
     );
   }
 

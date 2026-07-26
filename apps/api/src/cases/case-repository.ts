@@ -1230,6 +1230,19 @@ export class CaseRepository {
     };
   }
 
+  public findCaseSummaryById(
+    caseId: number,
+  ): CaseSummary | null {
+    return (
+      this.summariesById.get(caseId) ??
+      null
+    );
+  }
+
+  public getAllCaseSummaries(): readonly CaseSummary[] {
+    return this.sortedSummaries;
+  }
+
   public findCases(
     filters: CaseListFilters,
     pagination: PaginationInput,
