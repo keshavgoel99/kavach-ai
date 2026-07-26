@@ -29,6 +29,10 @@ import {
 } from './components/HotspotIntelligencePanel';
 
 import {
+  AnalyticsIntelligencePanel,
+} from './components/AnalyticsIntelligencePanel';
+
+import {
   SystemPanel,
 } from './components/SystemPanel';
 
@@ -36,7 +40,8 @@ type AppView =
   | 'dashboard'
   | 'records'
   | 'priority'
-  | 'hotspots';
+  | 'hotspots'
+  | 'analytics';
 
 interface ViewMetadata {
   eyebrow: string;
@@ -89,7 +94,18 @@ Readonly<
       'Hotspots',
 
     description:
-      'Review historical crime concentration, location trends and graph-linked operational context.',
+      'Pressure maps and spatio-temporal trends highlighting recurring crime locations and severity.',
+  },
+
+  analytics: {
+    eyebrow:
+      'Aggregate Investigation Analytics',
+
+    title:
+      'Analytics',
+
+    description:
+      'Compare crime trends, jurisdictions, investigation milestones, outcomes and recurring offence patterns.',
   },
 };
 
@@ -142,7 +158,7 @@ function App() {
       'dashboard',
     );
 
-  const metadata =
+    const metadata =
     VIEW_METADATA[activeView];
 
   return (
@@ -227,10 +243,16 @@ function App() {
           </button>
 
           <button
-            className="navigation__item"
+            className={navigationClass(
+              activeView ===
+                'analytics',
+            )}
             type="button"
-            disabled
-            title="Analytics is scheduled for a later checkpoint."
+            onClick={() =>
+              setActiveView(
+                'analytics',
+              )
+            }
           >
             Analytics
           </button>
@@ -374,6 +396,13 @@ function App() {
             <HotspotIntelligencePanel />
           </div>
         )}
+
+        {activeView ===
+          'analytics' && (
+          <div className="page-view">
+            <AnalyticsIntelligencePanel />
+          </div>
+        )}
       </main>
     </div>
   );
@@ -397,3 +426,4 @@ createRoot(
     <App />
   </React.StrictMode>,
 );
+

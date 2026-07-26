@@ -84,3 +84,20 @@ export type {
   HotspotTrendDirection,
   HotspotTrendQuery,
 } from './hotspot';
+
+export type {
+  AnalyticsAppliedQuery,
+  AnalyticsBreakdownItem,
+  AnalyticsDateRange,
+  AnalyticsDistrictComparisonItem,
+  AnalyticsFilterOptions,
+  AnalyticsLookupOption,
+  AnalyticsModusOperandiItem,
+  AnalyticsMonthlyPoint,
+  AnalyticsOverviewMetrics,
+  AnalyticsOverviewResponse,
+  AnalyticsPeriod,
+  AnalyticsPoliceStationOption,
+  AnalyticsQuery,
+} from './analytics';
+

@@ -823,7 +823,7 @@ export function HotspotIntelligencePanel() {
         const result =
           await window.kavach.hotspots
             .getLocationTrend(
-              selectedLocationId,
+              selectedLocationId as number,
 
               {
                 months:

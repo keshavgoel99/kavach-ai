@@ -15,6 +15,8 @@ import {
   fetchEntityById,
   fetchPriorityQueue,
   fetchSimilarCases,
+  fetchAnalyticsFilterOptions,
+  fetchAnalyticsOverview,
   requestJson,
 } from './case-api-client';
 
@@ -40,6 +42,10 @@ const IPC_CHANNELS = {
     'kavach:priority:get-queue',
   getSimilarCases:
     'kavach:similarity:get-cases',
+  getAnalyticsFilterOptions:
+    'kavach:analytics:get-filter-options',
+  getAnalyticsOverview:
+    'kavach:analytics:get-overview',
 } as const;
 
 const ALLOWED_GRAPH_RELATIONSHIPS =
@@ -349,6 +355,27 @@ function registerIpcHandlers(): void {
     ) =>
       fetchSimilarCases(
         suppliedCaseId,
+        suppliedQuery,
+      ),
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS
+      .getAnalyticsFilterOptions,
+
+    () =>
+      fetchAnalyticsFilterOptions(),
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS
+      .getAnalyticsOverview,
+
+    (
+      _event,
+      suppliedQuery: unknown,
+    ) =>
+      fetchAnalyticsOverview(
         suppliedQuery,
       ),
   );

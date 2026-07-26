@@ -14,7 +14,8 @@
     "priority:validate": "tsx src/priority/validate-priority-engine.ts",
     "similarity:validate": "tsx src/similarity/validate-similarity-engine.ts",
     "similarity:index:validate": "tsx src/similarity/validate-similarity-service.ts",
-    "hotspot:validate": "tsx src/hotspots/validate-hotspot-service.ts"
+    "hotspot:validate": "tsx src/hotspots/validate-hotspot-service.ts",
+    "analytics:validate": "tsx src/analytics/validate-analytics-service.ts"
   },
   "keywords": [],
   "author": "",
@@ -34,3 +35,4 @@
   },
   "private": true
 }
+

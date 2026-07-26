@@ -29,6 +29,10 @@ import {
   createHotspotRouter,
 } from './hotspots/hotspot-routes';
 
+import {
+  createAnalyticsRouter,
+} from './analytics/analytics-routes';
+
 export function createApp() {
   const app = express();
 
@@ -85,6 +89,11 @@ export function createApp() {
   app.use(
     '/api/v1/hotspots',
     createHotspotRouter(),
+  );
+
+  app.use(
+    '/api/v1/analytics',
+    createAnalyticsRouter(),
   );
 
   app.use((request, response) => {

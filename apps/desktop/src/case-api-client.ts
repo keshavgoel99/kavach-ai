@@ -14,6 +14,9 @@ import type {
   HotspotRiskBand,
   HotspotSummaryQuery,
   HotspotSummaryResponse,
+  AnalyticsFilterOptions,
+  AnalyticsOverviewResponse,
+  AnalyticsQuery,
   HotspotTrendQuery,
   SimilarCasesQuery,
   SimilarCasesResponse,
@@ -781,6 +784,186 @@ function normalizeHotspotTrendQuery(
   };
 }
 
+function normalizeAnalyticsDate(
+  value: unknown,
+  label: string,
+): string | undefined {
+  if (
+    value === undefined
+  ) {
+    return undefined;
+  }
+
+  if (
+    typeof value !== 'string'
+  ) {
+    throw new Error(
+      `${label} must be a date string.`,
+    );
+  }
+
+  const cleaned =
+    value.trim();
+
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(
+      cleaned,
+    )
+  ) {
+    throw new Error(
+      `${label} must use YYYY-MM-DD format.`,
+    );
+  }
+
+  const date =
+    new Date(
+      `${cleaned}T00:00:00.000Z`,
+    );
+
+  if (
+    Number.isNaN(
+      date.getTime(),
+    ) ||
+    date
+      .toISOString()
+      .slice(0, 10) !==
+      cleaned
+  ) {
+    throw new Error(
+      `${label} must contain a valid date.`,
+    );
+  }
+
+  return cleaned;
+}
+
+function normalizeAnalyticsIdList(
+  value: unknown,
+  label: string,
+): number[] | undefined {
+  if (
+    value === undefined
+  ) {
+    return undefined;
+  }
+
+  if (!Array.isArray(value)) {
+    throw new Error(
+      `${label} must be an array.`,
+    );
+  }
+
+  const result =
+    new Set<number>();
+
+  value.forEach(
+    (item) => {
+      if (
+        typeof item !== 'number' ||
+        !Number.isSafeInteger(
+          item,
+        ) ||
+        item < 1
+      ) {
+        throw new Error(
+          `${label} must contain positive integers.`,
+        );
+      }
+
+      result.add(item);
+    },
+  );
+
+  return [
+    ...result,
+  ];
+}
+
+function normalizeAnalyticsQuery(
+  value: unknown,
+): AnalyticsQuery {
+  if (
+    value === undefined
+  ) {
+    return {};
+  }
+
+  if (!isRecord(value)) {
+    throw new Error(
+      'An analytics query object is required.',
+    );
+  }
+
+  const registeredFrom =
+    normalizeAnalyticsDate(
+      value.registeredFrom,
+      'registeredFrom',
+    );
+
+  const registeredTo =
+    normalizeAnalyticsDate(
+      value.registeredTo,
+      'registeredTo',
+    );
+
+  if (
+    registeredFrom &&
+    registeredTo &&
+    registeredFrom >
+      registeredTo
+  ) {
+    throw new Error(
+      'registeredFrom cannot be after registeredTo.',
+    );
+  }
+
+  return {
+    registeredFrom,
+    registeredTo,
+
+    districtIds:
+      normalizeAnalyticsIdList(
+        value.districtIds,
+        'districtIds',
+      ),
+
+    policeStationIds:
+      normalizeAnalyticsIdList(
+        value.policeStationIds,
+        'policeStationIds',
+      ),
+
+    majorCrimeHeadIds:
+      normalizeAnalyticsIdList(
+        value.majorCrimeHeadIds,
+        'majorCrimeHeadIds',
+      ),
+  };
+}
+
+function addAnalyticsList(
+  parameters:
+    URLSearchParams,
+
+  key: string,
+
+  values:
+    readonly number[] |
+    undefined,
+): void {
+  if (
+    !values ||
+    values.length === 0
+  ) {
+    return;
+  }
+
+  parameters.set(
+    key,
+    values.join(','),
+  );
+}
+
 export async function fetchHotspotFilterOptions(): Promise<HotspotFilterOptions> {
   return requestJson<HotspotFilterOptions>(
     '/hotspots/filter-options',
@@ -886,3 +1069,65 @@ export async function fetchHotspotLocationTrend(
       : `/hotspots/locations/${locationId}/trend`,
   );
 }
+export async function fetchAnalyticsFilterOptions(): Promise<AnalyticsFilterOptions> {
+  return requestJson<
+    AnalyticsFilterOptions
+  >(
+    '/analytics/filter-options',
+  );
+}
+
+export async function fetchAnalyticsOverview(
+  suppliedQuery:
+    unknown = {},
+): Promise<AnalyticsOverviewResponse> {
+  const query =
+    normalizeAnalyticsQuery(
+      suppliedQuery,
+    );
+
+  const parameters =
+    new URLSearchParams();
+
+  addQueryValue(
+    parameters,
+    'registeredFrom',
+    query.registeredFrom,
+  );
+
+  addQueryValue(
+    parameters,
+    'registeredTo',
+    query.registeredTo,
+  );
+
+  addAnalyticsList(
+    parameters,
+    'districtIds',
+    query.districtIds,
+  );
+
+  addAnalyticsList(
+    parameters,
+    'policeStationIds',
+    query.policeStationIds,
+  );
+
+  addAnalyticsList(
+    parameters,
+    'majorCrimeHeadIds',
+    query.majorCrimeHeadIds,
+  );
+
+  const queryString =
+    parameters.toString();
+
+  return requestJson<
+    AnalyticsOverviewResponse
+  >(
+    queryString
+      ? "/analytics/overview?${queryString}"
+      : '/analytics/overview',
+  );
+}
+

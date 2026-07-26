@@ -13,9 +13,14 @@ import type {
 import type {
   SimilarityDesktopApi,
 } from './similarity-bridge';
+
 import type {
   HotspotDesktopApi,
 } from './hotspot-bridge';
+
+import type {
+  AnalyticsDesktopApi,
+} from './analytics-bridge';
 import type { ApiHealth } from '@kavach/shared-types';
 
 export interface RuntimeInfo {
@@ -46,4 +51,6 @@ export interface KavachDesktopApi {
   similarity: SimilarityDesktopApi;
 
   hotspots: HotspotDesktopApi;
+
+  analytics: AnalyticsDesktopApi;
 }

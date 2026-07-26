@@ -21,6 +21,21 @@ const IPC_CHANNELS = {
 
   getSimilarCases:
     'kavach:similarity:get-cases',
+
+  getHotspotFilterOptions:
+    'kavach:hotspots:get-filter-options',
+
+  getHotspotSummary:
+    'kavach:hotspots:get-summary',
+
+  getHotspotLocationTrend:
+    'kavach:hotspots:get-location-trend',
+
+  getAnalyticsFilterOptions:
+    'kavach:analytics:get-filter-options',
+
+  getAnalyticsOverview:
+    'kavach:analytics:get-overview',
 } as const;
 
 const kavachDesktopApi: KavachDesktopApi = {
@@ -114,6 +129,54 @@ const kavachDesktopApi: KavachDesktopApi = {
           .getSimilarCases,
 
         caseId,
+        query,
+      ),
+  },
+
+  hotspots: {
+    getFilterOptions: () =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS
+          .getHotspotFilterOptions,
+      ),
+
+    getSummary: (
+      query,
+    ) =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS
+          .getHotspotSummary,
+
+        query,
+      ),
+
+    getLocationTrend: (
+      locationId: number,
+      query,
+    ) =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS
+          .getHotspotLocationTrend,
+
+        locationId,
+        query,
+      ),
+  },
+
+  analytics: {
+    getFilterOptions: () =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS
+          .getAnalyticsFilterOptions,
+      ),
+
+    getOverview: (
+      query,
+    ) =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS
+          .getAnalyticsOverview,
+
         query,
       ),
   },
