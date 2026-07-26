@@ -18,6 +18,9 @@ const IPC_CHANNELS = {
 
   getPriorityQueue:
     'kavach:priority:get-queue',
+
+  getSimilarCases:
+    'kavach:similarity:get-cases',
 } as const;
 
 const kavachDesktopApi: KavachDesktopApi = {
@@ -97,6 +100,20 @@ const kavachDesktopApi: KavachDesktopApi = {
         IPC_CHANNELS
           .getPriorityQueue,
 
+        query,
+      ),
+  },
+
+  similarity: {
+    getSimilarCases: (
+      caseId: number,
+      query,
+    ) =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS
+          .getSimilarCases,
+
+        caseId,
         query,
       ),
   },

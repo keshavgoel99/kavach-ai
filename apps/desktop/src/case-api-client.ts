@@ -9,6 +9,8 @@ import type {
   CasePriorityQueueQuery,
   CasePriorityQueueResponse,
   EntityProfileDetail,
+  SimilarCasesQuery,
+  SimilarCasesResponse,
 } from '@kavach/shared-types';
 
 import type {
@@ -494,5 +496,151 @@ export async function fetchPriorityQueue(
     queryString
       ? `/priority-queue?${queryString}`
       : '/priority-queue',
+  );
+}
+
+function normalizeSimilarCasesQuery(
+  value: unknown,
+): SimilarCasesQuery {
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isRecord(value)) {
+    throw new Error(
+      'A similar-cases query object is required.',
+    );
+  }
+
+  const suppliedLimit =
+    value.limit;
+
+  const suppliedMinimumScore =
+    value.minimumScore;
+
+  let limit:
+    number | undefined;
+
+  let minimumScore:
+    number | undefined;
+
+  if (
+    suppliedLimit !== undefined
+  ) {
+    if (
+      typeof suppliedLimit !==
+        'number' ||
+      !Number.isSafeInteger(
+        suppliedLimit,
+      ) ||
+      suppliedLimit < 1
+    ) {
+      throw new Error(
+        'limit must be a positive integer.',
+      );
+    }
+
+    if (
+      suppliedLimit > 50
+    ) {
+      throw new Error(
+        'limit cannot be greater than 50.',
+      );
+    }
+
+    limit = suppliedLimit;
+  }
+
+  if (
+    suppliedMinimumScore !==
+      undefined
+  ) {
+    if (
+      typeof suppliedMinimumScore !==
+        'number' ||
+      !Number.isFinite(
+        suppliedMinimumScore,
+      ) ||
+      suppliedMinimumScore < 0 ||
+      suppliedMinimumScore > 100
+    ) {
+      throw new Error(
+        'minimumScore must be between 0 and 100.',
+      );
+    }
+
+    minimumScore =
+      suppliedMinimumScore;
+  }
+
+  return {
+    limit,
+    minimumScore,
+  };
+}
+
+export async function fetchSimilarCases(
+  suppliedCaseId: unknown,
+
+  suppliedQuery:
+    unknown = {},
+): Promise<SimilarCasesResponse> {
+  if (
+    typeof suppliedCaseId !==
+      'number' ||
+    !Number.isSafeInteger(
+      suppliedCaseId,
+    ) ||
+    suppliedCaseId < 1
+  ) {
+    throw new Error(
+      'caseId must be a positive integer.',
+    );
+  }
+
+  const query =
+    normalizeSimilarCasesQuery(
+      suppliedQuery,
+    );
+
+  const parameters =
+    new URLSearchParams();
+
+  if (
+    query.limit !== undefined
+  ) {
+    parameters.set(
+      'limit',
+      String(query.limit),
+    );
+  }
+
+  if (
+    query.minimumScore !==
+      undefined
+  ) {
+    parameters.set(
+      'minimumScore',
+      String(
+        query.minimumScore,
+      ),
+    );
+  }
+
+  const queryString =
+    parameters.toString();
+
+  return requestJson<
+    SimilarCasesResponse
+  >(
+    queryString
+      ? (
+          `/cases/${suppliedCaseId}` +
+          `/similar?${queryString}`
+        )
+      : (
+          `/cases/${suppliedCaseId}` +
+          '/similar'
+        ),
   );
 }

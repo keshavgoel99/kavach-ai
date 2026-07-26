@@ -14,6 +14,7 @@ import {
   fetchCasePriorityAssessment,
   fetchEntityById,
   fetchPriorityQueue,
+  fetchSimilarCases,
   requestJson,
 } from './case-api-client';
 
@@ -37,6 +38,8 @@ const IPC_CHANNELS = {
     'kavach:priority:get-case-assessment',
   getPriorityQueue:
     'kavach:priority:get-queue',
+  getSimilarCases:
+    'kavach:similarity:get-cases',
 } as const;
 
 const ALLOWED_GRAPH_RELATIONSHIPS =
@@ -331,6 +334,21 @@ function registerIpcHandlers(): void {
       suppliedQuery: unknown,
     ) =>
       fetchPriorityQueue(
+        suppliedQuery,
+      ),
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS
+      .getSimilarCases,
+
+    (
+      _event,
+      suppliedCaseId: unknown,
+      suppliedQuery: unknown,
+    ) =>
+      fetchSimilarCases(
+        suppliedCaseId,
         suppliedQuery,
       ),
   );
