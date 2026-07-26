@@ -12,7 +12,8 @@
     "data:validate": "tsx src/scripts/validate-dataset.ts",
     "graph:validate": "tsx src/data/validate-graph-dataset.ts",
     "priority:validate": "tsx src/priority/validate-priority-engine.ts",
-    "similarity:validate": "tsx src/similarity/validate-similarity-engine.ts"
+    "similarity:validate": "tsx src/similarity/validate-similarity-engine.ts",
+    "similarity:index:validate": "tsx src/similarity/validate-similarity-service.ts"
   },
   "keywords": [],
   "author": "",
