@@ -4,6 +4,10 @@ import type {
   CaseDetail,
   CaseFilterOptions,
   CaseListResponse,
+  CasePriorityAssessment,
+  CasePriorityBand,
+  CasePriorityQueueQuery,
+  CasePriorityQueueResponse,
   EntityProfileDetail,
 } from '@kavach/shared-types';
 
@@ -22,6 +26,176 @@ function isRecord(
     value !== null &&
     !Array.isArray(value)
   );
+}
+
+const ALLOWED_PRIORITY_BANDS =
+  new Set<CasePriorityBand>([
+    'ROUTINE',
+    'ELEVATED',
+    'HIGH',
+    'CRITICAL',
+  ]);
+
+function readOptionalPositiveInteger(
+  value: Record<string, unknown>,
+  key: string,
+  maximum?: number,
+): number | undefined {
+  const supplied =
+    value[key];
+
+  if (supplied === undefined) {
+    return undefined;
+  }
+
+  if (
+    typeof supplied !== 'number' ||
+    !Number.isSafeInteger(supplied) ||
+    supplied < 1
+  ) {
+    throw new Error(
+      `${key} must be a positive integer.`,
+    );
+  }
+
+  if (
+    maximum !== undefined &&
+    supplied > maximum
+  ) {
+    throw new Error(
+      `${key} cannot be greater than ${maximum}.`,
+    );
+  }
+
+  return supplied;
+}
+
+function readOptionalPositiveIntegerArray(
+  value: Record<string, unknown>,
+  key: string,
+): number[] | undefined {
+  const supplied =
+    value[key];
+
+  if (supplied === undefined) {
+    return undefined;
+  }
+
+  if (!Array.isArray(supplied)) {
+    throw new Error(
+      `${key} must be an array.`,
+    );
+  }
+
+  const uniqueValues =
+    new Set<number>();
+
+  supplied.forEach((item) => {
+    if (
+      typeof item !== 'number' ||
+      !Number.isSafeInteger(item) ||
+      item < 1
+    ) {
+      throw new Error(
+        `${key} must contain positive integers.`,
+      );
+    }
+
+    uniqueValues.add(item);
+  });
+
+  return [
+    ...uniqueValues,
+  ];
+}
+
+function readOptionalPriorityBands(
+  value: Record<string, unknown>,
+): CasePriorityBand[] | undefined {
+  const supplied =
+    value.bands;
+
+  if (supplied === undefined) {
+    return undefined;
+  }
+
+  if (!Array.isArray(supplied)) {
+    throw new Error(
+      'bands must be an array.',
+    );
+  }
+
+  const uniqueBands =
+    new Set<CasePriorityBand>();
+
+  supplied.forEach((item) => {
+    if (
+      typeof item !== 'string' ||
+      !ALLOWED_PRIORITY_BANDS.has(
+        item as CasePriorityBand,
+      )
+    ) {
+      throw new Error(
+        `Unsupported priority band: ${String(
+          item,
+        )}.`,
+      );
+    }
+
+    uniqueBands.add(
+      item as CasePriorityBand,
+    );
+  });
+
+  return [
+    ...uniqueBands,
+  ];
+}
+
+function normalizePriorityQueueQuery(
+  value: unknown,
+): CasePriorityQueueQuery {
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isRecord(value)) {
+    throw new Error(
+      'A priority queue query object is required.',
+    );
+  }
+
+  return {
+    page:
+      readOptionalPositiveInteger(
+        value,
+        'page',
+      ),
+
+    pageSize:
+      readOptionalPositiveInteger(
+        value,
+        'pageSize',
+        100,
+      ),
+
+    bands:
+      readOptionalPriorityBands(
+        value,
+      ),
+
+    districtIds:
+      readOptionalPositiveIntegerArray(
+        value,
+        'districtIds',
+      ),
+
+    policeStationIds:
+      readOptionalPositiveIntegerArray(
+        value,
+        'policeStationIds',
+      ),
+  };
 }
 
 function getApiErrorMessage(
@@ -88,6 +262,30 @@ function addQueryValue(
   if (normalized) {
     parameters.set(key, normalized);
   }
+}
+
+function addQueryList(
+  parameters: URLSearchParams,
+  key: string,
+
+  values:
+    readonly (
+      string |
+      number
+    )[] |
+    undefined,
+): void {
+  if (
+    !values ||
+    values.length === 0
+  ) {
+    return;
+  }
+
+  parameters.set(
+    key,
+    values.join(','),
+  );
 }
 
 export async function fetchCaseList(
@@ -219,5 +417,82 @@ export async function fetchCaseFilterOptions(): Promise<CaseFilterOptions> {
 export async function fetchCaseDashboardSummary(): Promise<CaseDashboardSummary> {
   return requestJson<CaseDashboardSummary>(
     '/cases/dashboard-summary',
+  );
+}
+
+export async function fetchCasePriorityAssessment(
+  suppliedCaseId: unknown,
+): Promise<CasePriorityAssessment> {
+  if (
+    typeof suppliedCaseId !==
+      'number' ||
+    !Number.isSafeInteger(
+      suppliedCaseId,
+    ) ||
+    suppliedCaseId < 1
+  ) {
+    throw new Error(
+      'caseId must be a positive integer.',
+    );
+  }
+
+  return requestJson<
+    CasePriorityAssessment
+  >(
+    `/cases/${suppliedCaseId}/priority`,
+  );
+}
+
+export async function fetchPriorityQueue(
+  suppliedQuery:
+    unknown = {},
+): Promise<CasePriorityQueueResponse> {
+  const query =
+    normalizePriorityQueueQuery(
+      suppliedQuery,
+    );
+
+  const parameters =
+    new URLSearchParams();
+
+  addQueryValue(
+    parameters,
+    'page',
+    query.page,
+  );
+
+  addQueryValue(
+    parameters,
+    'pageSize',
+    query.pageSize,
+  );
+
+  addQueryList(
+    parameters,
+    'bands',
+    query.bands,
+  );
+
+  addQueryList(
+    parameters,
+    'districtIds',
+    query.districtIds,
+  );
+
+  addQueryList(
+    parameters,
+    'policeStationIds',
+    query.policeStationIds,
+  );
+
+  const queryString =
+    parameters.toString();
+
+  return requestJson<
+    CasePriorityQueueResponse
+  >(
+    queryString
+      ? `/priority-queue?${queryString}`
+      : '/priority-queue',
   );
 }

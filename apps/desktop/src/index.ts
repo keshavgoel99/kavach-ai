@@ -11,7 +11,9 @@ import {
   fetchCaseDashboardSummary,
   fetchCaseFilterOptions,
   fetchCaseList,
+  fetchCasePriorityAssessment,
   fetchEntityById,
+  fetchPriorityQueue,
   requestJson,
 } from './case-api-client';
 
@@ -31,6 +33,10 @@ const IPC_CHANNELS = {
   getRuntimeInfo: 'kavach:system:get-runtime-info',
   getApiHealth: 'kavach:api:get-health',
   getGraphNeighborhood: 'kavach:graph:get-neighborhood',
+  getCasePriorityAssessment:
+    'kavach:priority:get-case-assessment',
+  getPriorityQueue:
+    'kavach:priority:get-queue',
 } as const;
 
 const ALLOWED_GRAPH_RELATIONSHIPS =
@@ -301,6 +307,32 @@ function registerIpcHandlers(): void {
         ),
       );
     },
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS
+      .getCasePriorityAssessment,
+
+    (
+      _event,
+      suppliedCaseId: unknown,
+    ) =>
+      fetchCasePriorityAssessment(
+        suppliedCaseId,
+      ),
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS
+      .getPriorityQueue,
+
+    (
+      _event,
+      suppliedQuery: unknown,
+    ) =>
+      fetchPriorityQueue(
+        suppliedQuery,
+      ),
   );
 
   ipcMain.handle(

@@ -12,6 +12,12 @@ const IPC_CHANNELS = {
   getEntityById: 'kavach:entities:get-by-id',
 
   getGraphNeighborhood: 'kavach:graph:get-neighborhood',
+
+  getCasePriorityAssessment:
+    'kavach:priority:get-case-assessment',
+
+  getPriorityQueue:
+    'kavach:priority:get-queue',
 } as const;
 
 const kavachDesktopApi: KavachDesktopApi = {
@@ -69,6 +75,28 @@ const kavachDesktopApi: KavachDesktopApi = {
     ) =>
       ipcRenderer.invoke(
         IPC_CHANNELS.getGraphNeighborhood,
+        query,
+      ),
+  },
+
+  priority: {
+    getCaseAssessment: (
+      caseId: number,
+    ) =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS
+          .getCasePriorityAssessment,
+
+        caseId,
+      ),
+
+    getQueue: (
+      query,
+    ) =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS
+          .getPriorityQueue,
+
         query,
       ),
   },
