@@ -447,7 +447,7 @@
 .assistant-methodology {
   display: grid;
   grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+    repeat(2, minmax(0, 1fr));
   gap: 20px;
 }
 
@@ -456,6 +456,19 @@
   color: rgba(222, 231, 240, 0.48);
   font-size: 8px;
   line-height: 1.55;
+}
+
+.assistant-answer__fallback {
+  margin-top: 13px;
+  padding: 10px;
+  border:
+    1px solid rgba(245, 191, 91, 0.25);
+  border-radius: 8px;
+  background:
+    rgba(245, 191, 91, 0.07);
+  color: #f6cf84;
+  font-size: 8px;
+  line-height: 1.5;
 }
 
 @media (max-width: 850px) {

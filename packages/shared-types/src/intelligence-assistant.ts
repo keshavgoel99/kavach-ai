@@ -3,6 +3,14 @@ export type IntelligenceAssistantConfidence =
   | 'MEDIUM'
   | 'HIGH';
 
+export type IntelligenceAssistantProvider =
+  | 'LOCAL'
+  | 'GEMINI';
+
+export type IntelligenceAssistantGenerationMode =
+  | 'DETERMINISTIC_EXTRACTIVE'
+  | 'GEMINI_GROUNDED';
+
 export interface IntelligenceAssistantQuery {
   query: string;
 
@@ -53,7 +61,18 @@ export interface IntelligenceAssistantResponse {
   grounded: true;
 
   generationMode:
-    'DETERMINISTIC_EXTRACTIVE';
+    IntelligenceAssistantGenerationMode;
+
+  provider:
+    IntelligenceAssistantProvider;
+
+  model: string | null;
+
+  fallbackUsed: boolean;
+
+  citationCaseIds: number[];
+
+  limitations: string[];
 
   matchingCaseCount: number;
   returnedSourceCount: number;

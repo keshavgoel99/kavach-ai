@@ -30,6 +30,7 @@
     "hotspot:validate": "tsx src/hotspots/validate-hotspot-service.ts",
     "analytics:validate": "tsx src/analytics/validate-analytics-service.ts",
     "assistant:validate": "tsx src/assistant/validate-intelligence-assistant.ts",
+    "assistant:gemini:validate": "tsx src/assistant/validate-gemini-grounded-assistant.ts",
     "test:unit": "node --import tsx --test src/testing/query-validation.test.ts",
     "test:integration": "node --import tsx --test --test-concurrency=1 src/testing/api.integration.test.ts src/testing/security.integration.test.ts",
     "verify": "npm run typecheck && npm run test:unit && npm run test:integration",
@@ -40,6 +41,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@google/genai": "^2.13.0",
     "@kavach/schema-catalog": "^0.1.0",
     "csv-parse": "^7.0.1",
     "express": "^5.2.1"

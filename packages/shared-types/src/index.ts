@@ -136,6 +136,8 @@ export type {
 export type {
   IntelligenceAssistantConfidence,
   IntelligenceAssistantFilters,
+  IntelligenceAssistantGenerationMode,
+  IntelligenceAssistantProvider,
   IntelligenceAssistantQuery,
   IntelligenceAssistantResponse,
   IntelligenceAssistantSource,

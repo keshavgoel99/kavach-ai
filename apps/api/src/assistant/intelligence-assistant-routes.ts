@@ -11,8 +11,8 @@ import {
 } from '../security/security-middleware';
 
 import {
-  getIntelligenceAssistantService,
-} from './intelligence-assistant-service';
+  getGeminiGroundedAssistantService,
+} from './gemini-grounded-assistant-service';
 
 function isRecord(
   value: unknown,
@@ -100,6 +100,26 @@ export function createIntelligenceAssistantRouter(): Router {
   const router =
     Router();
 
+  router.get(
+    '/status',
+
+    requirePermission(
+      'VIEW_CASES',
+    ),
+
+    (
+      _request,
+      response,
+    ) => {
+      response
+        .status(200)
+        .json(
+          getGeminiGroundedAssistantService()
+            .getStatus(),
+        );
+    },
+  );
+
   router.post(
     '/query',
 
@@ -119,12 +139,12 @@ export function createIntelligenceAssistantRouter(): Router {
           );
 
         const service =
-          await getIntelligenceAssistantService();
+          getGeminiGroundedAssistantService();
 
         response
           .status(200)
           .json(
-            service.query(
+            await service.query(
               query,
             ),
           );

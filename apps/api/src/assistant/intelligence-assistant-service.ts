@@ -1331,15 +1331,17 @@ export class IntelligenceAssistantService {
           }),
         );
 
+    const answer =
+      createAnswer(
+        sources,
+        ranked.length,
+      );
+
     return {
       query:
         cleanedQuery,
 
-      answer:
-        createAnswer(
-          sources,
-          ranked.length,
-        ),
+      answer,
 
       confidence:
         determineConfidence(
@@ -1350,6 +1352,29 @@ export class IntelligenceAssistantService {
 
       generationMode:
         'DETERMINISTIC_EXTRACTIVE',
+
+      provider:
+        'LOCAL',
+
+      model:
+        null,
+
+      fallbackUsed:
+        false,
+
+      citationCaseIds:
+        sources.map(
+          (source) =>
+            source.caseId,
+        ),
+
+      limitations: [
+        [
+          'The answer was generated',
+          'deterministically from lexical',
+          'retrieval results.',
+        ].join(' '),
+      ],
 
       matchingCaseCount:
         ranked.length,

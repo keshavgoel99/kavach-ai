@@ -163,7 +163,12 @@ export function IntelligenceAssistantPanel() {
               aria-hidden="true"
             />
 
-            OFFLINE · NO EXTERNAL MODEL
+            {response?.provider ===
+              'GEMINI'
+              ? `GEMINI · ${response.model ?? 'Configured model'}`
+              : response?.fallbackUsed
+                ? 'LOCAL FALLBACK'
+                : 'LOCAL RETRIEVAL · GEMINI SYNTHESIS'}
           </div>
         </header>
 
@@ -173,11 +178,13 @@ export function IntelligenceAssistantPanel() {
           </strong>
 
           <p>
-            Answers are created only from
-            retrieved FIR records. They do
-            not establish guilt, identity,
-            motive, conspiracy or criminal
-            association.
+            Retrieval is performed locally.
+            When Gemini is configured, only
+            the highest-ranked masked FIR
+            excerpts are sent for grounded
+            answer generation. Results do not
+            establish guilt, identity, motive,
+            conspiracy or criminal association.
           </p>
         </aside>
 
@@ -308,6 +315,15 @@ export function IntelligenceAssistantPanel() {
                 </div>
               </header>
 
+              {response.fallbackUsed && (
+                <div className="assistant-answer__fallback">
+                  Gemini generation was unavailable
+                  or failed grounding validation.
+                  The answer below was produced by
+                  the deterministic local fallback.
+                </div>
+              )}
+
               <div className="assistant-answer__text">
                 {response.answer
                   .split(
@@ -339,11 +355,19 @@ export function IntelligenceAssistantPanel() {
                 </span>
 
                 <span>
+                  {response.provider}
+                  {response.model
+                    ? ` · ${response.model}`
+                    : ''}
+                </span>
+
+                <span>
                   {
                     response
-                      .returnedSourceCount
+                      .citationCaseIds
+                      .length
                   }{' '}
-                  cited sources
+                  validated citations
                 </span>
               </footer>
             </article>
@@ -559,6 +583,29 @@ export function IntelligenceAssistantPanel() {
             </section>
 
             <section className="assistant-methodology">
+              <div>
+                <span>
+                  ANSWER LIMITATIONS
+                </span>
+
+                <section>
+                  {response.limitations.map(
+                    (
+                      limitation,
+                      index,
+                    ) => (
+                      <strong
+                        key={[
+                          index,
+                          limitation,
+                        ].join(':')}
+                      >
+                        {limitation}
+                      </strong>
+                    ),
+                  )}
+                </section>
+              </div>
               <div>
                 <span>
                   RETRIEVAL METHOD
