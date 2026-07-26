@@ -9,6 +9,12 @@ import type {
   CasePriorityQueueQuery,
   CasePriorityQueueResponse,
   EntityProfileDetail,
+  HotspotFilterOptions,
+  HotspotLocationTrendResponse,
+  HotspotRiskBand,
+  HotspotSummaryQuery,
+  HotspotSummaryResponse,
+  HotspotTrendQuery,
   SimilarCasesQuery,
   SimilarCasesResponse,
 } from '@kavach/shared-types';
@@ -642,5 +648,241 @@ export async function fetchSimilarCases(
           `/cases/${suppliedCaseId}` +
           '/similar'
         ),
+  );
+}
+
+const ALLOWED_HOTSPOT_RISK_BANDS =
+  new Set<HotspotRiskBand>([
+    'LOW',
+    'MODERATE',
+    'HIGH',
+    'CRITICAL',
+  ]);
+
+function normalizeHotspotRiskBands(
+  value: unknown,
+): HotspotRiskBand[] |
+undefined {
+  if (
+    value === undefined
+  ) {
+    return undefined;
+  }
+
+  if (!Array.isArray(value)) {
+    throw new Error(
+      'riskBands must be an array.',
+    );
+  }
+
+  const result =
+    new Set<HotspotRiskBand>();
+
+  value.forEach(
+    (item) => {
+      if (
+        typeof item !== 'string' ||
+        !ALLOWED_HOTSPOT_RISK_BANDS.has(
+          item as
+            HotspotRiskBand,
+        )
+      ) {
+        throw new Error(
+          `Unsupported hotspot risk band: ${String(
+            item,
+          )}.`,
+        );
+      }
+
+      result.add(
+        item as HotspotRiskBand,
+      );
+    },
+  );
+
+  return [
+    ...result,
+  ];
+}
+
+function normalizeHotspotSummaryQuery(
+  value: unknown,
+): HotspotSummaryQuery {
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isRecord(value)) {
+    throw new Error(
+      'A hotspot summary query object is required.',
+    );
+  }
+
+  return {
+    year:
+      readOptionalPositiveInteger(
+        value,
+        'year',
+      ),
+
+    month:
+      readOptionalPositiveInteger(
+        value,
+        'month',
+        12,
+      ),
+
+    districtIds:
+      readOptionalPositiveIntegerArray(
+        value,
+        'districtIds',
+      ),
+
+    policeStationIds:
+      readOptionalPositiveIntegerArray(
+        value,
+        'policeStationIds',
+      ),
+
+    riskBands:
+      normalizeHotspotRiskBands(
+        value.riskBands,
+      ),
+
+    limit:
+      readOptionalPositiveInteger(
+        value,
+        'limit',
+        180,
+      ),
+  };
+}
+
+function normalizeHotspotTrendQuery(
+  value: unknown,
+): HotspotTrendQuery {
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isRecord(value)) {
+    throw new Error(
+      'A hotspot trend query object is required.',
+    );
+  }
+
+  return {
+    months:
+      readOptionalPositiveInteger(
+        value,
+        'months',
+        41,
+      ),
+  };
+}
+
+export async function fetchHotspotFilterOptions(): Promise<HotspotFilterOptions> {
+  return requestJson<HotspotFilterOptions>(
+    '/hotspots/filter-options',
+  );
+}
+
+export async function fetchHotspotSummary(
+  suppliedQuery:
+    unknown = {},
+): Promise<HotspotSummaryResponse> {
+  const query =
+    normalizeHotspotSummaryQuery(
+      suppliedQuery,
+    );
+
+  const parameters =
+    new URLSearchParams();
+
+  addQueryValue(
+    parameters,
+    'year',
+    query.year,
+  );
+
+  addQueryValue(
+    parameters,
+    'month',
+    query.month,
+  );
+
+  addQueryList(
+    parameters,
+    'districtIds',
+    query.districtIds,
+  );
+
+  addQueryList(
+    parameters,
+    'policeStationIds',
+    query.policeStationIds,
+  );
+
+  addQueryList(
+    parameters,
+    'riskBands',
+    query.riskBands,
+  );
+
+  addQueryValue(
+    parameters,
+    'limit',
+    query.limit,
+  );
+
+  const queryString =
+    parameters.toString();
+
+  return requestJson<
+    HotspotSummaryResponse
+  >(
+    queryString
+      ? `/hotspots/summary?${queryString}`
+      : '/hotspots/summary',
+  );
+}
+
+export async function fetchHotspotLocationTrend(
+  locationId: number,
+  suppliedQuery:
+    unknown = {},
+): Promise<HotspotLocationTrendResponse> {
+  if (
+    !Number.isSafeInteger(locationId) ||
+    locationId < 1
+  ) {
+    throw new Error(
+      'locationId must be a positive integer.',
+    );
+  }
+
+  const query =
+    normalizeHotspotTrendQuery(
+      suppliedQuery,
+    );
+
+  const parameters =
+    new URLSearchParams();
+
+  addQueryValue(
+    parameters,
+    'months',
+    query.months,
+  );
+
+  const queryString =
+    parameters.toString();
+
+  return requestJson<
+    HotspotLocationTrendResponse
+  >(
+    queryString
+      ? `/hotspots/locations/${locationId}/trend?${queryString}`
+      : `/hotspots/locations/${locationId}/trend`,
   );
 }

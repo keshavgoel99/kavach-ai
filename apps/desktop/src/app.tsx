@@ -25,13 +25,18 @@ import {
 } from './components/PriorityQueuePanel';
 
 import {
+  HotspotIntelligencePanel,
+} from './components/HotspotIntelligencePanel';
+
+import {
   SystemPanel,
 } from './components/SystemPanel';
 
 type AppView =
   | 'dashboard'
   | 'records'
-  | 'priority';
+  | 'priority'
+  | 'hotspots';
 
 interface ViewMetadata {
   eyebrow: string;
@@ -74,6 +79,17 @@ Readonly<
 
     description:
       'Review evidence-referenced case priorities using transparent and bounded investigative signals.',
+  },
+
+  hotspots: {
+    eyebrow:
+      'Aggregate Spatial Intelligence',
+
+    title:
+      'Hotspots',
+
+    description:
+      'Review historical crime concentration, location trends and graph-linked operational context.',
   },
 };
 
@@ -196,10 +212,16 @@ function App() {
           </button>
 
           <button
-            className="navigation__item"
+            className={navigationClass(
+              activeView ===
+                'hotspots',
+            )}
             type="button"
-            disabled
-            title="Hotspot intelligence is scheduled for a later checkpoint."
+            onClick={() =>
+              setActiveView(
+                'hotspots',
+              )
+            }
           >
             Hotspots
           </button>
@@ -343,6 +365,13 @@ function App() {
           'priority' && (
           <div className="page-view">
             <PriorityQueuePanel />
+          </div>
+        )}
+
+        {activeView ===
+          'hotspots' && (
+          <div className="page-view">
+            <HotspotIntelligencePanel />
           </div>
         )}
       </main>

@@ -84,12 +84,12 @@ async function main(): Promise<void> {
       summary.items.length;
     index += 1
   ) {
-    const previous =
+    const previous: any =
       summary.items[
         index - 1
       ];
 
-    const current =
+    const current: any =
       summary.items[index];
 
     assert.ok(previous);
@@ -166,12 +166,12 @@ async function main(): Promise<void> {
       trend.points.length;
     index += 1
   ) {
-    const previous =
+    const previous: any =
       trend.points[
         index - 1
       ];
 
-    const current =
+    const current: any =
       trend.points[index];
 
     assert.ok(previous);
