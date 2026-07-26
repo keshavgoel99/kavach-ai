@@ -189,6 +189,56 @@ async function main(): Promise<void> {
           8,
         );
 
+        result.factors.forEach(
+          (factor) => {
+            factor.evidence.forEach(
+              (reference) => {
+                assert.ok(
+                  Array.isArray(
+                    reference.actions,
+                  ),
+                );
+
+                reference.actions.forEach(
+                  (action) => {
+                    assert.ok(
+                      action.label.trim()
+                        .length > 0,
+                    );
+
+                    if (
+                      action.type ===
+                      'OPEN_ENTITY_PROFILE'
+                    ) {
+                      assert.ok(
+                        Number.isSafeInteger(
+                          action.entityId,
+                        ),
+                      );
+
+                      assert.ok(
+                        action.entityId > 0,
+                      );
+                    } else {
+                      assert.ok(
+                        action.rootNodeId
+                          .trim()
+                          .length > 0,
+                      );
+
+                      assert.ok(
+                        action.title
+                          .trim()
+                          .length > 0,
+                      );
+                    }
+                  },
+                );
+              },
+            );
+          },
+        );
+
         const activeLabels =
           getActiveSimilarityFactorLabels(
             {

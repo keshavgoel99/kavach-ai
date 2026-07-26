@@ -22,6 +22,15 @@ interface SimilarCasesWorkspaceProps {
   onOpenCase(
     caseId: number,
   ): void;
+
+  onOpenEntity(
+    entityId: number,
+  ): void;
+
+  onOpenGraph(
+    rootNodeId: string,
+    title: string,
+  ): void;
 }
 
 interface SimilarityQuery {
@@ -207,6 +216,8 @@ function orderedFactors(
 export function SimilarCasesWorkspace({
   sourceCaseId,
   onOpenCase,
+  onOpenEntity,
+  onOpenGraph,
 }: SimilarCasesWorkspaceProps) {
   const [
     draftLimit,
@@ -1191,6 +1202,54 @@ export function SimilarCasesWorkspace({
                                           </span>
                                         )}
                                       </footer>
+
+                                      {reference.actions && reference.actions.length >
+                                        0 && (
+                                        <div className="similarity-factor__actions">
+                                          {reference.actions.map(
+                                            (
+                                              action,
+                                              actionIndex,
+                                            ) => (
+                                              <button
+                                                key={[
+                                                  action.type,
+                                                  action.label,
+                                                  actionIndex,
+                                                ].join(':')}
+                                                type="button"
+                                                onClick={() => {
+                                                  if (
+                                                    action.type ===
+                                                    'OPEN_ENTITY_PROFILE'
+                                                  ) {
+                                                    onOpenEntity(
+                                                      action.entityId,
+                                                    );
+
+                                                    return;
+                                                  }
+
+                                                  onOpenGraph(
+                                                    action.rootNodeId,
+                                                    action.title,
+                                                  );
+                                                }}
+                                              >
+                                                <span>
+                                                  {action.label}
+                                                </span>
+
+                                                <strong
+                                                  aria-hidden="true"
+                                                >
+                                                  →
+                                                </strong>
+                                              </button>
+                                            ),
+                                          )}
+                                        </div>
+                                      )}
                                     </article>
                                   ),
                                 )}

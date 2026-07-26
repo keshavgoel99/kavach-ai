@@ -49,6 +49,8 @@ function evidence(
 
     description:
       `Validation evidence from ${sourceTable}.`,
+
+    actions: [],
   };
 }
 

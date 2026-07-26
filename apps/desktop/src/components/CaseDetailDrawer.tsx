@@ -542,6 +542,23 @@ export function CaseDetailDrawer({
                   candidateCaseId,
                 )
               }
+              onOpenEntity={(
+                entityId,
+              ) =>
+                setSelectedEntityId(
+                  entityId,
+                )
+              }
+              onOpenGraph={(
+                rootNodeId,
+                graphTitle,
+              ) =>
+                setGraphWorkspace({
+                  rootNodeId,
+                  title:
+                    graphTitle,
+                })
+              }
             />
 
             <section className="case-detail__section">

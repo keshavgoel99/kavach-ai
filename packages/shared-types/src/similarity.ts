@@ -12,6 +12,26 @@ export type CaseSimilarityFactorCode =
   | 'SAME_LOCATION'
   | 'SIMILAR_INCIDENT_TIME';
 
+export type CaseSimilarityEvidenceAction =
+  | {
+      type:
+        'OPEN_ENTITY_PROFILE';
+
+      label: string;
+
+      entityId: number;
+    }
+  | {
+      type:
+        'OPEN_GRAPH';
+
+      label: string;
+
+      rootNodeId: string;
+
+      title: string;
+    };
+
 export interface CaseSimilarityEvidenceReference {
   sourceTable: string;
 
@@ -24,6 +44,9 @@ export interface CaseSimilarityEvidenceReference {
   candidateCaseId: number;
 
   description: string;
+
+  actions:
+    CaseSimilarityEvidenceAction[];
 }
 
 export interface CaseSimilarityFactor {

@@ -745,6 +745,51 @@
   font-size: 7px;
 }
 
+.similarity-factor__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top:
+    1px solid rgba(126, 150, 172, 0.09);
+}
+
+.similarity-factor__actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px;
+  border:
+    1px solid rgba(117, 223, 196, 0.21);
+  border-radius: 7px;
+  background:
+    rgba(117, 223, 196, 0.055);
+  color: #92ead5;
+  cursor: pointer;
+  font: inherit;
+}
+
+.similarity-factor__actions button:hover {
+  border-color:
+    rgba(117, 223, 196, 0.4);
+  background:
+    rgba(117, 223, 196, 0.11);
+}
+
+.similarity-factor__actions
+  button span {
+  color: rgba(146, 234, 213, 0.78);
+  font-size: 7px;
+  font-weight: 800;
+}
+
+.similarity-factor__actions
+  button strong {
+  color: #92ead5;
+  font-size: 8px;
+}
+
 @media (max-width: 920px) {
   .similar-cases__workspace {
     grid-template-columns: 1fr;

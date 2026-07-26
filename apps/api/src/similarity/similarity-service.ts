@@ -1,5 +1,6 @@
 import type {
   CaseSimilarityAssessment,
+  CaseSimilarityEvidenceAction,
   CaseSimilarityEvidenceReference,
   CaseSummary,
   SimilarCase,
@@ -462,6 +463,10 @@ function createEvidenceReference(
 
   description:
     string,
+
+  actions:
+    readonly CaseSimilarityEvidenceAction[] =
+      [],
 ): CaseSimilarityEvidenceReference {
   return {
     sourceTable:
@@ -478,6 +483,10 @@ function createEvidenceReference(
     candidateCaseId,
 
     description,
+
+    actions: [
+      ...actions,
+    ],
   };
 }
 
@@ -1696,6 +1705,32 @@ export class CaseSimilarityService {
                 'verified canonical entity',
                 `${entityId}.`,
               ].join(' '),
+
+            (entityId) => [
+              {
+                type:
+                  'OPEN_ENTITY_PROFILE',
+
+                label:
+                  'Open entity profile',
+
+                entityId: entityId as number,
+              },
+
+              {
+                type:
+                  'OPEN_GRAPH',
+
+                label:
+                  'Explore entity graph',
+
+                rootNodeId:
+                  `PERSON:${entityId}`,
+
+                title:
+                  `Entity graph · Person ${entityId}`,
+              },
+            ],
           ),
       },
 
@@ -1722,6 +1757,22 @@ export class CaseSimilarityService {
                 'to identifier',
                 `${identifierId}.`,
               ].join(' '),
+
+            (identifierId) => [
+              {
+                type:
+                  'OPEN_GRAPH',
+
+                label:
+                  'Explore identifier graph',
+
+                rootNodeId:
+                  `IDENTIFIER:${identifierId}`,
+
+                title:
+                  `Identifier graph · ${identifierId}`,
+              },
+            ],
           ),
       },
 
@@ -1742,6 +1793,22 @@ export class CaseSimilarityService {
                     'location',
                     `${source.locationId}.`,
                   ].join(' '),
+
+                  [
+                    {
+                      type:
+                        'OPEN_GRAPH',
+
+                      label:
+                        'Explore location graph',
+
+                      rootNodeId:
+                        `LOCATION:${source.locationId}`,
+
+                      title:
+                        `Location graph · ${source.locationId}`,
+                    },
+                  ],
                 ),
               ]
             : [],
@@ -1800,6 +1867,10 @@ export class CaseSimilarityService {
 
     description:
       string,
+
+    actions:
+      readonly CaseSimilarityEvidenceAction[] =
+        [],
   ): CaseSimilarityEvidenceReference {
     return {
       sourceTable:
@@ -1817,6 +1888,10 @@ export class CaseSimilarityService {
         candidate.caseId,
 
       description,
+
+      actions: [
+        ...actions,
+      ],
     };
   }
 
@@ -1849,6 +1924,12 @@ export class CaseSimilarityService {
     createDescription: (
       value: Key,
     ) => string,
+
+    createActions: (
+      value: Key,
+    ) =>
+      readonly CaseSimilarityEvidenceAction[] =
+      () => [],
   ): CaseSimilarityEvidenceReference[] {
     const references:
       CaseSimilarityEvidenceReference[] =
@@ -1858,6 +1939,9 @@ export class CaseSimilarityService {
       (value) => {
         const description =
           createDescription(value);
+
+        const actions =
+          createActions(value);
 
         (
           sourceEvidence.get(
@@ -1876,6 +1960,8 @@ export class CaseSimilarityService {
                   'Source case:',
                   description,
                 ].join(' '),
+
+                actions,
               ),
             );
           },
@@ -1898,6 +1984,8 @@ export class CaseSimilarityService {
                   'Candidate case:',
                   description,
                 ].join(' '),
+
+                actions,
               ),
             );
           },
