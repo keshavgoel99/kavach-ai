@@ -17,6 +17,9 @@ import {
 import {
   InvestigationGraphWorkspace,
 } from './InvestigationGraphWorkspace';
+import {
+  SimilarCasesWorkspace,
+} from './SimilarCasesWorkspace';
 
 interface CaseDetailDrawerProps {
   caseId: number | null;
@@ -206,6 +209,14 @@ export function CaseDetailDrawer({
     title: string;
   } | null>(null);
 
+  const [
+    relatedCaseId,
+    setRelatedCaseId,
+  ] =
+    useState<number | null>(
+      null,
+    );
+
   useEffect(() => {
     if (caseId === null) {
       setDetail(null);
@@ -213,6 +224,7 @@ export function CaseDetailDrawer({
       setLoading(false);
       setSelectedEntityId(null);
       setGraphWorkspace(null);
+      setRelatedCaseId(null);
       return undefined;
     }
 
@@ -223,6 +235,7 @@ export function CaseDetailDrawer({
     setLoading(true);
     setSelectedEntityId(null);
     setGraphWorkspace(null);
+    setRelatedCaseId(null);
 
     async function loadDetail(): Promise<void> {
       try {
@@ -297,9 +310,10 @@ export function CaseDetailDrawer({
   }
 
   return (
-    <div
-      className="case-detail__backdrop"
-      role="presentation"
+    <>
+      <div
+        className="case-detail__backdrop"
+        role="presentation"
       onMouseDown={(event) => {
         if (
           event.target ===
@@ -516,6 +530,19 @@ export function CaseDetailDrawer({
             </section>
 
             <CasePriorityExplanation caseId={detail.caseId} />
+
+            <SimilarCasesWorkspace
+              sourceCaseId={
+                detail.caseId
+              }
+              onOpenCase={(
+                candidateCaseId,
+              ) =>
+                setRelatedCaseId(
+                  candidateCaseId,
+                )
+              }
+            />
 
             <section className="case-detail__section">
               <div className="case-detail__section-heading">
@@ -1202,6 +1229,17 @@ export function CaseDetailDrawer({
           }
         />
       )}
-    </div>
+
+      {relatedCaseId !== null &&
+        relatedCaseId !== caseId && (
+          <CaseDetailDrawer
+            caseId={relatedCaseId}
+            onClose={() =>
+              setRelatedCaseId(null)
+            }
+          />
+        )}
+      </div>
+    </>
   );
 }
