@@ -25,6 +25,10 @@ import {
   createSimilarityRouter,
 } from './similarity/similarity-routes';
 
+import {
+  createHotspotRouter,
+} from './hotspots/hotspot-routes';
+
 export function createApp() {
   const app = express();
 
@@ -76,6 +80,11 @@ export function createApp() {
   app.use(
     '/api/v1',
     createSimilarityRouter(),
+  );
+
+  app.use(
+    '/api/v1/hotspots',
+    createHotspotRouter(),
   );
 
   app.use((request, response) => {

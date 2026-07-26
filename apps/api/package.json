@@ -13,7 +13,8 @@
     "graph:validate": "tsx src/data/validate-graph-dataset.ts",
     "priority:validate": "tsx src/priority/validate-priority-engine.ts",
     "similarity:validate": "tsx src/similarity/validate-similarity-engine.ts",
-    "similarity:index:validate": "tsx src/similarity/validate-similarity-service.ts"
+    "similarity:index:validate": "tsx src/similarity/validate-similarity-service.ts",
+    "hotspot:validate": "tsx src/hotspots/validate-hotspot-service.ts"
   },
   "keywords": [],
   "author": "",

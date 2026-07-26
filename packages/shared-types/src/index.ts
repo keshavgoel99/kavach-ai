@@ -66,4 +66,21 @@ export type {
   InvestigationGraphQuery,
   InvestigationGraphRelationshipType,
   InvestigationGraphResponse,
-} from './graph';export * from './similarity';
+} from './graph';export * from './similarity';
+
+export type {
+  HotspotDataSplit,
+  HotspotDistrictOption,
+  HotspotFilterOptions,
+  HotspotLocationReference,
+  HotspotLocationTrendResponse,
+  HotspotMonthlyMetric,
+  HotspotPeriod,
+  HotspotPoliceStationOption,
+  HotspotRiskBand,
+  HotspotSummaryItem,
+  HotspotSummaryQuery,
+  HotspotSummaryResponse,
+  HotspotTrendDirection,
+  HotspotTrendQuery,
+} from './hotspot';
