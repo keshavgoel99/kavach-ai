@@ -1,11 +1,81 @@
-import { ApiStatusCard } from "./components/ApiStatusCard";
-import { SystemPanel } from "./components/SystemPanel";
-import { CrimeRecordsPanel } from './components/CrimeRecordsPanel';
+import {
+  useState,
+} from 'react';
+
+import React from 'react';
+
+import {
+  createRoot,
+} from 'react-dom/client';
+
+import {
+  ApiStatusCard,
+} from './components/ApiStatusCard';
+
+import {
+  CrimeRecordsPanel,
+} from './components/CrimeRecordsPanel';
+
 import {
   DashboardIntelligencePanel,
 } from './components/DashboardIntelligencePanel';
-import React from "react";
-import { createRoot } from "react-dom/client";
+
+import {
+  PriorityQueuePanel,
+} from './components/PriorityQueuePanel';
+
+import {
+  SystemPanel,
+} from './components/SystemPanel';
+
+type AppView =
+  | 'dashboard'
+  | 'records'
+  | 'priority';
+
+interface ViewMetadata {
+  eyebrow: string;
+  title: string;
+  description: string;
+}
+
+const VIEW_METADATA:
+Readonly<
+  Record<AppView, ViewMetadata>
+> = {
+  dashboard: {
+    eyebrow:
+      'Kavach Intelligence Centre',
+
+    title:
+      'Dashboard',
+
+    description:
+      'Monitor validated crime data, investigation activity and operational intelligence.',
+  },
+
+  records: {
+    eyebrow:
+      'Validated FIR Repository',
+
+    title:
+      'Crime Records',
+
+    description:
+      'Search and inspect registered cases, evidence, timelines, entities and investigation graphs.',
+  },
+
+  priority: {
+    eyebrow:
+      'Operational Intelligence',
+
+    title:
+      'Priority Queue',
+
+    description:
+      'Review evidence-referenced case priorities using transparent and bounded investigative signals.',
+  },
+};
 
 function StatusCard({
   title,
@@ -18,139 +88,282 @@ function StatusCard({
 }) {
   return (
     <article className="status-card">
-      <p className="status-card__title">{title}</p>
-      <strong className="status-card__value">{value}</strong>
-      <p className="status-card__description">{description}</p>
+      <p className="status-card__title">
+        {title}
+      </p>
+
+      <strong className="status-card__value">
+        {value}
+      </strong>
+
+      <p className="status-card__description">
+        {description}
+      </p>
     </article>
   );
 }
 
+function navigationClass(
+  active:
+    boolean,
+): string {
+  return [
+    'navigation__item',
+    active
+      ? 'navigation__item--active'
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
 function App() {
+  const [
+    activeView,
+    setActiveView,
+  ] =
+    useState<AppView>(
+      'dashboard',
+    );
+
+  const metadata =
+    VIEW_METADATA[activeView];
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand__logo">K</div>
+          <div className="brand__logo">
+            K
+          </div>
 
           <div>
             <h1>Kavach AI</h1>
-            <p>Crime Intelligence</p>
+
+            <p>
+              Crime Intelligence
+            </p>
           </div>
         </div>
 
-        <nav className="navigation" aria-label="Main navigation">
+        <nav
+          className="navigation"
+          aria-label="Main navigation"
+        >
           <button
-            className="navigation__item navigation__item--active"
+            className={navigationClass(
+              activeView ===
+                'dashboard',
+            )}
             type="button"
+            onClick={() =>
+              setActiveView(
+                'dashboard',
+              )
+            }
           >
             Dashboard
           </button>
 
-          <button className="navigation__item" type="button">
+          <button
+            className={navigationClass(
+              activeView ===
+                'records',
+            )}
+            type="button"
+            onClick={() =>
+              setActiveView(
+                'records',
+              )
+            }
+          >
             Crime Records
           </button>
 
-          <button className="navigation__item" type="button">
+          <button
+            className={navigationClass(
+              activeView ===
+                'priority',
+            )}
+            type="button"
+            onClick={() =>
+              setActiveView(
+                'priority',
+              )
+            }
+          >
+            Priority Queue
+          </button>
+
+          <button
+            className="navigation__item"
+            type="button"
+            disabled
+            title="Hotspot intelligence is scheduled for a later checkpoint."
+          >
             Hotspots
           </button>
 
-          <button className="navigation__item" type="button">
+          <button
+            className="navigation__item"
+            type="button"
+            disabled
+            title="Analytics is scheduled for a later checkpoint."
+          >
             Analytics
           </button>
 
-          <button className="navigation__item" type="button">
+          <button
+            className="navigation__item"
+            type="button"
+            disabled
+            title="Reports are scheduled for a later checkpoint."
+          >
             Reports
           </button>
         </nav>
 
         <div className="sidebar__footer">
           <span className="status-dot" />
-          Desktop foundation online
+
+          Operational data link online
         </div>
       </aside>
 
       <main className="main-content">
         <header className="page-header">
           <div>
-            <p className="page-header__eyebrow">Kavach Intelligence Centre</p>
-            <h2>Dashboard</h2>
+            <p className="page-header__eyebrow">
+              {metadata.eyebrow}
+            </p>
+
+            <h2>
+              {metadata.title}
+            </h2>
+
             <p className="page-header__description">
-              Monitor crime patterns, hotspots and predictive insights.
+              {metadata.description}
             </p>
           </div>
 
-          <div className="phase-badge">PHASE 2 · DATA FOUNDATION</div>
+          <div className="phase-badge">
+            PHASE 2 · OPERATIONAL
+            INTELLIGENCE
+          </div>
         </header>
 
-        <section className="status-grid" aria-label="Project status">
-          <StatusCard
-            title="Desktop client"
-            value="Ready"
-            description="Electron and React renderer are running."
-          />
+        {activeView ===
+          'dashboard' && (
+          <div className="page-view">
+            <section
+              className="status-grid"
+              aria-label="Project status"
+            >
+              <StatusCard
+                title="Desktop client"
+                value="Ready"
+                description="Electron and React renderer are operational."
+              />
 
-          <ApiStatusCard />
-        </section>
+              <ApiStatusCard />
 
-        <DashboardIntelligencePanel />
+              <StatusCard
+                title="Priority engine"
+                value="Active"
+                description="Explainable case-review assessments are available."
+              />
+            </section>
 
-        <CrimeRecordsPanel />
+            <DashboardIntelligencePanel />
 
-        <section className="content-grid">
-          <article className="panel">
-            <div className="panel__header">
-              <div>
-                <p className="panel__eyebrow">Foundation</p>
-                <h3>Phase 1 progress</h3>
-              </div>
+            <section className="content-grid">
+              <article className="panel">
+                <div className="panel__header">
+                  <div>
+                    <p className="panel__eyebrow">
+                      Investigation Platform
+                    </p>
 
-              <span className="panel__badge panel__badge--complete">
-                Foundation ready
-              </span>
-            </div>
+                    <h3>
+                      Operational capability
+                    </h3>
+                  </div>
 
-            <div className="checklist">
-              <div className="checklist__item checklist__item--complete">
-                <span>1</span>
-                Electron application initialized
-              </div>
+                  <span className="panel__badge panel__badge--complete">
+                    Intelligence active
+                  </span>
+                </div>
 
-              <div className="checklist__item checklist__item--complete">
-                <span>2</span>
-                React renderer configured
-              </div>
+                <div className="checklist">
+                  <div className="checklist__item checklist__item--complete">
+                    <span>1</span>
 
-              <div className="checklist__item checklist__item--complete">
-                <span>3</span>
-                Secure preload bridge
-              </div>
+                    Validated FIR repository
+                  </div>
 
-              <div className="checklist__item checklist__item--complete">
-                <span>4</span>
-                Backend health API
-              </div>
+                  <div className="checklist__item checklist__item--complete">
+                    <span>2</span>
 
-              <div className="checklist__item checklist__item--complete">
-                <span>5</span>
-                Shared TypeScript contracts
-              </div>
-            </div>
-          </article>
+                    Canonical entity intelligence
+                  </div>
 
-          <SystemPanel />
-        </section>
+                  <div className="checklist__item checklist__item--complete">
+                    <span>3</span>
+
+                    Evidence-backed investigation graph
+                  </div>
+
+                  <div className="checklist__item checklist__item--complete">
+                    <span>4</span>
+
+                    Explainable case priority engine
+                  </div>
+
+                  <div className="checklist__item checklist__item--complete">
+                    <span>5</span>
+
+                    Secure Electron API boundary
+                  </div>
+                </div>
+              </article>
+
+              <SystemPanel />
+            </section>
+          </div>
+        )}
+
+        {activeView ===
+          'records' && (
+          <div className="page-view">
+            <CrimeRecordsPanel />
+          </div>
+        )}
+
+        {activeView ===
+          'priority' && (
+          <div className="page-view">
+            <PriorityQueuePanel />
+          </div>
+        )}
       </main>
     </div>
   );
 }
 
-const rootElement = document.getElementById("root");
+const rootElement =
+  document.getElementById(
+    'root',
+  );
 
 if (!rootElement) {
-  throw new Error("Unable to find the React root element.");
+  throw new Error(
+    'Unable to find the React root element.',
+  );
 }
 
-createRoot(rootElement).render(
+createRoot(
+  rootElement,
+).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,

@@ -496,3 +496,53 @@ body {
     "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   letter-spacing: 0.05em;
 }
+.navigation__item:not(:disabled) {
+  cursor: pointer;
+}
+
+.navigation__item:not(
+  :disabled
+):hover {
+  color: #ffffff;
+  background:
+    rgba(117, 223, 196, 0.07);
+}
+
+.navigation__item--active:not(
+  :disabled
+) {
+  color: #ffffff;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(117, 223, 196, 0.16),
+      rgba(117, 223, 196, 0.055)
+    );
+  box-shadow:
+    inset 3px 0 0 #75dfc4;
+}
+
+.navigation__item:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
+.page-view {
+  min-width: 0;
+  animation:
+    kavach-page-enter 180ms ease-out;
+}
+
+@keyframes kavach-page-enter {
+  from {
+    opacity: 0;
+    transform:
+      translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0);
+  }
+}
