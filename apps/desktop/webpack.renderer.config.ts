@@ -22,6 +22,8 @@ const rendererRules: Required<ModuleOptions>['rules'] = [
 ];
 
 export const rendererConfig: Configuration = {
+  devtool: 'source-map',
+
   module: {
     rules: rendererRules,
   },
