@@ -28,6 +28,8 @@ import type {
   SecurityAuditResponse,
   SimilarCasesQuery,
   SimilarCasesResponse,
+  IntelligenceAssistantQuery,
+  IntelligenceAssistantResponse,
 } from '@kavach/shared-types';
 
 import type {
@@ -1572,6 +1574,76 @@ export async function recordSecurityAuditEvent(
           suppliedRequest as
             unknown as
             ClientAuditEventRequest,
+        ),
+    },
+  );
+}
+
+export async function fetchIntelligenceAssistantResponse(
+  suppliedRequest:
+    unknown,
+): Promise<IntelligenceAssistantResponse> {
+  if (
+    !isRecord(
+      suppliedRequest,
+    ) ||
+    typeof suppliedRequest
+      .query !==
+      'string'
+  ) {
+    throw new Error(
+      'A natural-language query is required.',
+    );
+  }
+
+  const request:
+    IntelligenceAssistantQuery = {
+    query:
+      suppliedRequest
+        .query
+        .trim(),
+
+    limit:
+      typeof suppliedRequest
+        .limit ===
+        'number'
+        ? suppliedRequest.limit
+        : undefined,
+
+    minimumScore:
+      typeof suppliedRequest
+        .minimumScore ===
+        'number'
+        ? suppliedRequest
+            .minimumScore
+        : undefined,
+  };
+
+  if (
+    request.query.length < 3 ||
+    request.query.length > 500
+  ) {
+    throw new Error(
+      'The query must contain 3-500 characters.',
+    );
+  }
+
+  return requestJson<
+    IntelligenceAssistantResponse
+  >(
+    '/assistant/query',
+
+    {
+      method: 'POST',
+
+      headers: {
+        'content-type':
+          'application/json',
+      },
+
+      body:
+        JSON.stringify(
+          request,
         ),
     },
   );

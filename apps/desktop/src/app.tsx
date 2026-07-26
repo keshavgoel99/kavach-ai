@@ -49,6 +49,10 @@ import {
   AuditLogPanel,
 } from './components/AuditLogPanel';
 
+import {
+  IntelligenceAssistantPanel,
+} from './components/IntelligenceAssistantPanel';
+
 type AppView =
   | 'dashboard'
   | 'records'
@@ -56,7 +60,8 @@ type AppView =
   | 'hotspots'
   | 'analytics'
   | 'reports'
-  | 'security';
+  | 'security'
+  | 'assistant';
 
 interface ViewMetadata {
   eyebrow: string;
@@ -143,6 +148,17 @@ Readonly<
 
     description:
       'Review authentication, authorization, resource access and controlled-export activity.',
+  },
+
+  assistant: {
+    eyebrow:
+      'Offline Retrieval-Grounded Intelligence',
+
+    title:
+      'Assistant',
+
+    description:
+      'Search synthetic FIR records using natural language and receive evidence-grounded answers with direct case citations.',
   },
 };
 
@@ -352,6 +368,25 @@ function App() {
               Audit Log
             </button>
           )}
+
+          {hasPermission(
+            'VIEW_CASES',
+          ) && (
+            <button
+              className={navigationClass(
+                activeView ===
+                  'assistant',
+              )}
+              type="button"
+              onClick={() =>
+                setActiveView(
+                  'assistant',
+                )
+              }
+            >
+              Intelligence Assistant
+            </button>
+          )}
         </nav>
 
         <div className="sidebar__footer">
@@ -502,6 +537,13 @@ function App() {
           'security' && (
           <div className="page-view">
             <AuditLogPanel />
+          </div>
+        )}
+
+        {activeView ===
+          'assistant' && (
+          <div className="page-view">
+            <IntelligenceAssistantPanel />
           </div>
         )}
       </main>

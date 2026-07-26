@@ -132,3 +132,11 @@ export type {
   SecurityAuditResponse,
   SecurityPermission,
 } from './security';
+
+export type {
+  IntelligenceAssistantConfidence,
+  IntelligenceAssistantFilters,
+  IntelligenceAssistantQuery,
+  IntelligenceAssistantResponse,
+  IntelligenceAssistantSource,
+} from './intelligence-assistant';

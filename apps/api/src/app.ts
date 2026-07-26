@@ -50,6 +50,10 @@ import {
   createAnalyticsRouter,
 } from './analytics/analytics-routes';
 
+import {
+  createIntelligenceAssistantRouter,
+} from './assistant/intelligence-assistant-routes';
+
 const app = express();
 
 app.disable(
@@ -228,6 +232,11 @@ app.use(
 
     next(error);
   },
+);
+
+app.use(
+  '/api/v1/assistant',
+  createIntelligenceAssistantRouter(),
 );
 
 app.use((request, response) => {

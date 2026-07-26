@@ -39,6 +39,7 @@ import {
   requestJson,
   setAuthenticationInvalidatedListener,
   getConfiguredApiBaseUrl,
+  fetchIntelligenceAssistantResponse,
 } from './case-api-client';
 
 import type {
@@ -97,6 +98,9 @@ const IPC_CHANNELS = {
 
   sessionExpired:
     'kavach:security:session-expired',
+
+  queryAssistant:
+    'kavach:assistant:query',
 } as const;
 
 const ALLOWED_GRAPH_RELATIONSHIPS =
@@ -538,6 +542,19 @@ function registerIpcHandlers(): void {
       request: unknown,
     ) =>
       recordSecurityAuditEvent(
+        request,
+      ),
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS
+      .queryAssistant,
+
+    (
+      _event,
+      request: unknown,
+    ) =>
+      fetchIntelligenceAssistantResponse(
         request,
       ),
   );

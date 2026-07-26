@@ -29,6 +29,7 @@
     "similarity:index:validate": "tsx src/similarity/validate-similarity-service.ts",
     "hotspot:validate": "tsx src/hotspots/validate-hotspot-service.ts",
     "analytics:validate": "tsx src/analytics/validate-analytics-service.ts",
+    "assistant:validate": "tsx src/assistant/validate-intelligence-assistant.ts",
     "test:unit": "node --import tsx --test src/testing/query-validation.test.ts",
     "test:integration": "node --import tsx --test --test-concurrency=1 src/testing/api.integration.test.ts src/testing/security.integration.test.ts",
     "verify": "npm run typecheck && npm run test:unit && npm run test:integration",

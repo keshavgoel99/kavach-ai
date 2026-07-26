@@ -63,6 +63,9 @@ const IPC_CHANNELS = {
 
   sessionExpired:
     'kavach:security:session-expired',
+
+  queryAssistant:
+    'kavach:assistant:query',
 } as const;
 
 const kavachDesktopApi: KavachDesktopApi = {
@@ -295,6 +298,18 @@ const kavachDesktopApi: KavachDesktopApi = {
         );
       };
     },
+  },
+
+  assistant: {
+    query: (
+      request,
+    ) =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS
+          .queryAssistant,
+
+        request,
+      ),
   },
 };
 

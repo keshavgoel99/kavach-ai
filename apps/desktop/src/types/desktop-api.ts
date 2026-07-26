@@ -30,6 +30,10 @@ import type {
   SecurityDesktopApi,
 } from './security-bridge';
 
+import type {
+  IntelligenceAssistantDesktopApi,
+} from './intelligence-assistant-bridge';
+
 import type { ApiHealth } from '@kavach/shared-types';
 
 export interface RuntimeInfo {
@@ -67,4 +71,7 @@ export interface KavachDesktopApi {
 
   security:
     SecurityDesktopApi;
+
+  assistant:
+    IntelligenceAssistantDesktopApi;
 }
